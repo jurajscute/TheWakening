@@ -324,7 +324,68 @@ function renderActionPanel() {
     return;
   }
 
+if (currentRoomData.phase === "night_result") {
+  if (me.readyForPhase) {
+    actionText.innerHTML = '<span class="ready-text">Waiting for others...</span>';
+    return;
+  }
+
+  actionText.textContent = me.privateMessage || "No result.";
+
+  const btn = document.createElement("button");
+  btn.textContent = "Continue";
+  btn.className = "player-action-button";
+  btn.addEventListener("click", continueNightResult);
+  actionControls.appendChild(btn);
+  return;
+}
+
   actionText.textContent = "Waiting for the next phase...";
+}
+
+async function continueNightResult() {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
+      readyForPhase: true
+    });
+
+    await maybeAdvanceAfterNightResult();
+  } catch (error) {
+    console.error("Night result continue failed:", error);
+  }
+}
+
+async function maybeAdvanceAfterNightResult() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const playersRef = collection(db, "rooms", currentRoomCode, "players");
+
+    const [roomSnap, playersSnap] = await Promise.all([
+      getDoc(roomRef),
+      getDocs(playersRef)
+    ]);
+
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.phase !== "night_result") return;
+
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+    const alivePlayers = players.filter((p) => p.isAlive);
+
+    const allReady = alivePlayers.every((p) => p.readyForPhase === true);
+
+    if (!allReady) return;
+
+    await updateDoc(roomRef, {
+      phase: "morning"
+    });
+  } catch (error) {
+    console.error("Advance night result failed:", error);
+  }
 }
 
 async function createRoom() {
@@ -359,7 +420,8 @@ async function createRoom() {
       team: null,
       readyForPhase: false,
       nightActionTargetId: null,
-      voteTargetId: null
+      voteTargetId: null,
+      privateMessage: ""
     });
 
     currentRoomCode = roomCode;
@@ -419,7 +481,8 @@ async function joinRoom() {
       team: null,
       readyForPhase: false,
       nightActionTargetId: null,
-      voteTargetId: null
+      voteTargetId: null,
+      privateMessage: ""
     });
 
     currentRoomCode = roomCode;
@@ -465,7 +528,9 @@ function subscribeToRoom(roomCode) {
         phaseText.textContent = "Game Over";
       } else {
         phaseText.textContent = `Phase: ${currentRoomData.phase}`;
-      }
+      } else if (currentRoomData.phase === "night_result") {
+  phaseText.textContent = `Night ${currentRoomData.dayNumber} — Results`;
+}
 
       renderPublicMessage();
       renderActionPanel();
@@ -637,10 +702,28 @@ async function maybeResolveNight() {
       }
     });
 
-    batch.update(roomRef, {
-      phase: "morning",
-      publicMessage
-    });
+    // assign private messages
+players.forEach((player) => {
+  let message = "Nothing happened.";
+
+  if (player.role === "murderer") {
+    message = targetId
+      ? "Your kill was successful."
+      : "Your kill failed.";
+  } else {
+    message = "You survived the night.";
+  }
+
+  batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+    privateMessage: message,
+    readyForPhase: false
+  });
+});
+
+batch.update(roomRef, {
+  phase: "night_result",
+  publicMessage
+});
 
     await batch.commit();
   } catch (error) {
