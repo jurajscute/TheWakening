@@ -227,13 +227,13 @@ function getAliveOtherPlayers() {
 
 function getWinnerFromPlayers(players) {
   const aliveMurderers = players.filter((p) => p.isAlive && p.team === "murderer").length;
-  const aliveVillagers = players.filter((p) => p.isAlive && p.team === "village").length;
+  const aliveNonMurderers = players.filter((p) => p.isAlive && p.team !== "murderer").length;
 
   if (aliveMurderers === 0) {
     return "village";
   }
 
-  if (aliveMurderers >= aliveVillagers) {
+  if (aliveMurderers >= aliveNonMurderers) {
     return "murderer";
   }
 
@@ -1291,6 +1291,18 @@ async function submitVote(targetId) {
     console.error("Vote submit failed:", error);
     alert("Vote submit failed: " + error.message);
   }
+}
+
+function getExecutionerWinners(players, eliminatedPlayerId, cause) {
+  if (cause !== "vote") return [];
+
+  return players.filter(
+    (player) =>
+      player.isAlive &&
+      player.role === "executioner" &&
+      player.executionerTargetId &&
+      player.executionerTargetId === eliminatedPlayerId
+  );
 }
 
 async function maybeResolveVoting() {
