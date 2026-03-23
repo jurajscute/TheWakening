@@ -100,6 +100,15 @@ function getRoleInfo(role) {
     };
   }
 
+  if (role === "doctor") {
+    return {
+      name: "Doctor",
+      team: "Village Team",
+      description: "Each night, you choose one player to protect, including yourself. If they are attacked, they survive.",
+      className: "role-villager"
+    };
+  }
+
   return {
     name: "Villager",
     team: "Village Team",
@@ -238,25 +247,37 @@ function renderActionPanel() {
     }
 
     if (me.role === "murderer") {
-      actionText.textContent = "Choose a player to kill tonight.";
-      const targets = getAliveOtherPlayers();
+  actionText.textContent = "Choose a player to kill tonight.";
+  const targets = getAliveOtherPlayers();
 
-      targets.forEach((target) => {
-        const btn = document.createElement("button");
-        btn.textContent = target.name;
-        btn.className = "player-action-button";
-        btn.addEventListener("click", () => submitNightAction(target.id));
-        actionControls.appendChild(btn);
-      });
-    } else {
-      actionText.textContent = "You have no night action. Click continue when ready.";
+  targets.forEach((target) => {
+    const btn = document.createElement("button");
+    btn.textContent = target.name;
+    btn.className = "player-action-button";
+    btn.addEventListener("click", () => submitNightAction(target.id));
+    actionControls.appendChild(btn);
+  });
+} else if (me.role === "doctor") {
+  actionText.textContent = "Choose a player to protect tonight.";
 
-      const btn = document.createElement("button");
-      btn.textContent = "Continue";
-      btn.className = "player-action-button";
-      btn.addEventListener("click", markReadyWithoutAction);
-      actionControls.appendChild(btn);
-    }
+  const targets = getAlivePlayers();
+
+  targets.forEach((target) => {
+    const btn = document.createElement("button");
+    btn.textContent = `Protect: ${target.name}`;
+    btn.className = "player-action-button";
+    btn.addEventListener("click", () => submitDoctorAction(target.id));
+    actionControls.appendChild(btn);
+  });
+} else {
+  actionText.textContent = "You have no night action. Click continue when ready.";
+
+  const btn = document.createElement("button");
+  btn.textContent = "Continue";
+  btn.className = "player-action-button";
+  btn.addEventListener("click", markReadyWithoutAction);
+  actionControls.appendChild(btn);
+}
 
     return;
   }
@@ -381,10 +402,16 @@ async function maybeAdvanceAfterNightResult() {
     if (!allReady) return;
 
     const murderer = players.find((p) => p.isAlive && p.role === "murderer");
+    const doctor = players.find((p) => p.isAlive && p.role === "doctor");
+
     const targetId = murderer ? murderer.nightActionTargetId : null;
+    const protectedId = doctor ? doctor.protectTargetId : null;
+
+    const killBlocked = !!targetId && !!protectedId && targetId === protectedId;
+    const killSucceeded = !!targetId && !killBlocked;
 
     let morningMessage = "No one died tonight.";
-    if (targetId) {
+    if (killSucceeded) {
       const target = players.find((p) => p.id === targetId);
       if (target) {
         morningMessage = `${target.name} was found dead at dawn.`;
@@ -443,7 +470,8 @@ async function createRoom() {
       readyForPhase: false,
       nightActionTargetId: null,
       voteTargetId: null,
-      privateMessage: ""
+      privateMessage: "",
+      protectTargetId: null,
     });
 
     currentRoomCode = roomCode;
@@ -504,7 +532,8 @@ async function joinRoom() {
       readyForPhase: false,
       nightActionTargetId: null,
       voteTargetId: null,
-      privateMessage: ""
+      privateMessage: "",
+      protectTargetId: null,
     });
 
     currentRoomCode = roomCode;
@@ -615,21 +644,34 @@ async function startGame() {
 
     const players = playersSnap.docs.map((docSnap) => docSnap.data());
     const shuffledPlayers = shuffleArray(players);
-    const murdererId = shuffledPlayers[0].id;
+const murdererId = shuffledPlayers[0].id;
+const doctorId = players.length >= 3 ? shuffledPlayers[1].id : null;
 
-    const batch = writeBatch(db);
+const batch = writeBatch(db);
 
-    players.forEach((player) => {
-      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-        role: player.id === murdererId ? "murderer" : "villager",
-        team: player.id === murdererId ? "murderer" : "village",
-        readyForPhase: false,
-        nightActionTargetId: null,
-        voteTargetId: null,
-        privateMessage: "",
-        isAlive: true
-      });
-    });
+players.forEach((player) => {
+  let role = "villager";
+  let team = "village";
+
+  if (player.id === murdererId) {
+    role = "murderer";
+    team = "murderer";
+  } else if (doctorId && player.id === doctorId) {
+    role = "doctor";
+    team = "village";
+  }
+
+  batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+    role,
+    team,
+    readyForPhase: false,
+    nightActionTargetId: null,
+    protectTargetId: null,
+    voteTargetId: null,
+    privateMessage: "",
+    isAlive: true
+  });
+});
 
     batch.update(roomRef, {
       status: "in_progress",
@@ -659,6 +701,23 @@ async function submitNightAction(targetId) {
   } catch (error) {
     console.error("Submit night action failed:", error);
     alert("Night action failed: " + error.message);
+  }
+}
+
+async function submitDoctorAction(targetId) {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
+      protectTargetId: targetId,
+      readyForPhase: true
+    });
+
+    await maybeResolveNight();
+  } catch (error) {
+    console.error("Doctor action failed:", error);
+    alert("Doctor action failed: " + error.message);
   }
 }
 
@@ -701,52 +760,63 @@ async function maybeResolveNight() {
     if (!allReady) return;
 
     const murderer = alivePlayers.find((player) => player.role === "murderer");
+    const doctor = alivePlayers.find((player) => player.role === "doctor");
+
     const targetId = murderer ? murderer.nightActionTargetId : null;
+    const protectedId = doctor ? doctor.protectTargetId : null;
+
+    const killBlocked = !!targetId && !!protectedId && targetId === protectedId;
+    const killSucceeded = !!targetId && !killBlocked;
 
     let publicMessage = "No one died tonight.";
     const batch = writeBatch(db);
 
-    if (targetId) {
+    if (killSucceeded) {
       const target = players.find((player) => player.id === targetId);
       if (target && target.isAlive) {
         batch.update(doc(db, "rooms", currentRoomCode, "players", targetId), {
           isAlive: false,
           readyForPhase: false
         });
-        publicMessage = `${target.name} was found dead at dawn.`;
       }
     }
 
     players.forEach((player) => {
-      if (player.isAlive && player.id !== targetId) {
-        batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-          readyForPhase: false
-        });
+      let message = "Nothing happened.";
+
+      if (player.role === "murderer") {
+        if (!targetId) {
+          message = "Your kill failed.";
+        } else if (killBlocked) {
+          message = "Your kill failed. Your target was protected.";
+        } else {
+          message = "Your kill was successful.";
+        }
+      } else if (player.role === "doctor") {
+        if (!protectedId) {
+          message = "You did not protect anyone.";
+        } else if (killBlocked) {
+          const savedPlayer = players.find((p) => p.id === protectedId);
+          message = savedPlayer
+            ? `You successfully protected ${savedPlayer.name}.`
+            : "Your protection was successful.";
+        } else {
+          message = "Your protection was not needed.";
+        }
+      } else {
+        message = "You survived the night.";
       }
+
+      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+        privateMessage: message,
+        readyForPhase: false
+      });
     });
 
-    // assign private messages
-players.forEach((player) => {
-  let message = "Nothing happened.";
-
-  if (player.role === "murderer") {
-    message = targetId
-      ? "Your kill was successful."
-      : "Your kill failed.";
-  } else {
-    message = "You survived the night.";
-  }
-
-  batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-    privateMessage: message,
-    readyForPhase: false
-  });
-});
-
-batch.update(roomRef, {
-  phase: "night_result",
-  publicMessage: "The night is ending..."
-});
+    batch.update(roomRef, {
+      phase: "night_result",
+      publicMessage: "The night is ending..."
+    });
 
     await batch.commit();
   } catch (error) {
@@ -972,12 +1042,14 @@ async function maybeAdvanceAfterVoteResult() {
     const batch = writeBatch(db);
 
     alivePlayers.forEach((player) => {
-      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-        readyForPhase: false,
-        nightActionTargetId: null,
-        voteTargetId: null
-      });
-    });
+  batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+    readyForPhase: false,
+    nightActionTargetId: null,
+    protectTargetId: null,
+    voteTargetId: null,
+    privateMessage: ""
+  });
+});
 
     batch.update(roomRef, {
       phase: "night_action",
