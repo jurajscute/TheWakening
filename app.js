@@ -15,25 +15,21 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBQpkKgqM9Jse1ju39S_DRcyst3Jf_h4iY",
+  authDomain: "the-wakening.firebaseapp.com",
+  projectId: "the-wakening",
+  storageBucket: "the-wakening.firebasestorage.app",
+  messagingSenderId: "349435615649",
+  appId: "1:349435615649:web:73d0f1a7b8da8ef214d3e0",
+  measurementId: "G-ZPBLWY5TF9"
 };
 
 const app = initializeApp(firebaseConfig);
 
 const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true
+  experimentalForceLongPolling: true,
+  useFetchStreams: false
 });
-
-// If needed later, swap to:
-// const db = initializeFirestore(app, {
-//   experimentalForceLongPolling: true,
-//   useFetchStreams: false
-// });
 
 // =====================================
 // 3. GAME STATE
@@ -109,16 +105,6 @@ function resetLocalState() {
   currentPlayerName = null;
 }
 
-async function roomExists(roomCode) {
-  try {
-    const roomRef = doc(db, "rooms", roomCode);
-    const roomSnap = await getDoc(roomRef);
-    return roomSnap.exists();
-  } catch (error) {
-    console.error("roomExists error:", error);
-    throw error;
-  }
-}
 // =====================================
 // 6. CREATE ROOM
 // =====================================
@@ -131,11 +117,7 @@ async function createRoom() {
       return;
     }
 
-    let roomCode = generateRoomCode();
-    while (await roomExists(roomCode)) {
-      roomCode = generateRoomCode();
-    }
-
+    const roomCode = generateRoomCode();
     const playerId = generatePlayerId();
 
     const roomRef = doc(db, "rooms", roomCode);
@@ -169,7 +151,7 @@ async function createRoom() {
     subscribeToPlayers(roomCode);
   } catch (error) {
     console.error("Create room failed:", error);
-    alert("Create room failed. Check console for details.");
+    alert("Create room failed. Check the console.");
   }
 }
 
