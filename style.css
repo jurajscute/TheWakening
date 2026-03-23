@@ -49,6 +49,11 @@ button:hover {
   background: #8c1b1b;
 }
 
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 #room,
 #game {
   margin-top: 30px;
@@ -81,12 +86,14 @@ button:hover {
 }
 
 .dead-text {
-  opacity: 0.6;
+  opacity: 0.45;
+  text-decoration: line-through;
 }
 
 #roomStatus,
 #phaseText,
-#actionText {
+#actionText,
+#publicMessageText {
   color: #caa27f;
   font-style: italic;
 }
@@ -124,4 +131,10 @@ button:hover {
 .ready-text {
   color: #9ed39e;
   font-weight: bold;
+}
+
+.win-text {
+  color: #ffcc88;
+  font-weight: bold;
+  font-size: 20px;
 }

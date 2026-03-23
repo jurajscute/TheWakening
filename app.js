@@ -57,7 +57,8 @@ const roleName = document.getElementById("roleName");
 const roleTeam = document.getElementById("roleTeam");
 const roleDescription = document.getElementById("roleDescription");
 
-const actionPanel = document.getElementById("actionPanel");
+const publicMessageText = document.getElementById("publicMessageText");
+
 const actionText = document.getElementById("actionText");
 const actionControls = document.getElementById("actionControls");
 
@@ -96,7 +97,7 @@ function getRoleInfo(role) {
     return {
       name: "Murderer",
       team: "Murderer Team",
-      description: "Each night, you choose a player to kill. You win when murderers equal or outnumber the village.",
+      description: "Each night, you choose a player to kill. You win when murderers equal or outnumber villagers.",
       className: "role-murderer"
     };
   }
@@ -104,7 +105,7 @@ function getRoleInfo(role) {
   return {
     name: "Villager",
     team: "Village Team",
-    description: "You have no night action. Find and vote out all murderers to win.",
+    description: "You have no night action. Vote out all murderers to win.",
     className: "role-villager"
   };
 }
@@ -131,6 +132,8 @@ function showMenuUI() {
   roomStatus.textContent = "";
   playerList.innerHTML = "";
   alivePlayerList.innerHTML = "";
+  phaseText.textContent = "";
+  publicMessageText.textContent = "";
   actionText.textContent = "";
   actionControls.innerHTML = "";
   startBtn.style.display = "none";
@@ -161,28 +164,6 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-function renderAlivePlayers(players) {
-  alivePlayerList.innerHTML = "";
-
-  players
-    .filter((player) => player.isAlive)
-    .forEach((player) => {
-      const li = document.createElement("li");
-      li.textContent = player.name;
-      alivePlayerList.appendChild(li);
-    });
-}
-
-function renderRole(role) {
-  const info = getRoleInfo(role);
-  roleName.textContent = info.name;
-  roleTeam.textContent = info.team;
-  roleDescription.textContent = info.description;
-
-  roleCard.className = "role-card";
-  roleCard.classList.add(info.className);
-}
-
 function getMe() {
   return currentPlayers.find((player) => player.id === currentPlayerId) || null;
 }
@@ -197,6 +178,52 @@ function getAliveOtherPlayers() {
   );
 }
 
+function countAliveByTeam(team) {
+  return currentPlayers.filter((player) => player.isAlive && player.team === team).length;
+}
+
+function getWinner() {
+  const aliveMurderers = countAliveByTeam("murderer");
+  const aliveVillagers = countAliveByTeam("village");
+
+  if (aliveMurderers === 0) {
+    return "village";
+  }
+
+  if (aliveMurderers >= aliveVillagers) {
+    return "murderer";
+  }
+
+  return null;
+}
+
+function renderAlivePlayers(players) {
+  alivePlayerList.innerHTML = "";
+
+  players.forEach((player) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <span class="${player.isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
+    `;
+    alivePlayerList.appendChild(li);
+  });
+}
+
+function renderRole(role) {
+  const info = getRoleInfo(role);
+  roleName.textContent = info.name;
+  roleTeam.textContent = info.team;
+  roleDescription.textContent = info.description;
+
+  roleCard.className = "role-card";
+  roleCard.classList.add(info.className);
+}
+
+function renderPublicMessage() {
+  if (!currentRoomData) return;
+  publicMessageText.textContent = currentRoomData.publicMessage || "No message yet.";
+}
+
 function renderActionPanel() {
   actionControls.innerHTML = "";
 
@@ -206,56 +233,68 @@ function renderActionPanel() {
   if (!me) return;
 
   if (!me.isAlive) {
-    actionText.textContent = "You are dead and cannot act.";
+    actionText.textContent = "You are dead and can no longer act.";
     return;
   }
 
-  if (currentRoomData.phase !== "night_action") {
-    actionText.textContent = "Waiting for the next phase...";
-    return;
-  }
-
-  if (me.readyForPhase) {
-    actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
-    return;
-  }
-
-  if (me.role === "murderer") {
-    actionText.textContent = "Choose a player to kill tonight.";
-
-    const targets = getAliveOtherPlayers();
-
-    if (targets.length === 0) {
-      const btn = document.createElement("button");
-      btn.textContent = "No valid targets";
-      btn.disabled = true;
-      btn.className = "player-action-button";
-      actionControls.appendChild(btn);
+  if (currentRoomData.phase === "night_action") {
+    if (me.readyForPhase) {
+      actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
       return;
     }
 
-    targets.forEach((target) => {
+    if (me.role === "murderer") {
+      actionText.textContent = "Choose a player to kill tonight.";
+
+      const targets = getAliveOtherPlayers();
+
+      targets.forEach((target) => {
+        const btn = document.createElement("button");
+        btn.textContent = target.name;
+        btn.className = "player-action-button";
+        btn.addEventListener("click", () => submitNightAction(target.id));
+        actionControls.appendChild(btn);
+      });
+    } else {
+      actionText.textContent = "You have no night action. Click continue when ready.";
+
       const btn = document.createElement("button");
-      btn.textContent = target.name;
+      btn.textContent = "Continue";
       btn.className = "player-action-button";
-      btn.addEventListener("click", () => submitNightAction(target.id));
+      btn.addEventListener("click", markReadyWithoutAction);
       actionControls.appendChild(btn);
-    });
-  } else {
-    actionText.textContent = "You have no night action. Click continue when ready.";
+    }
+
+    return;
+  }
+
+  if (currentRoomData.phase === "morning") {
+    if (me.readyForPhase) {
+      actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
+      return;
+    }
+
+    actionText.textContent = "Read the morning message, then continue.";
 
     const btn = document.createElement("button");
     btn.textContent = "Continue";
     btn.className = "player-action-button";
-    btn.addEventListener("click", markReadyWithoutAction);
+    btn.addEventListener("click", continueMorning);
     actionControls.appendChild(btn);
+    return;
   }
+
+  if (currentRoomData.phase === "game_over") {
+    actionText.innerHTML = '<span class="win-text">The game has ended.</span>';
+    return;
+  }
+
+  actionText.textContent = "Waiting for the next phase...";
 }
 
 async function createRoom() {
   try {
     const name = nameInput.value.trim();
-
     if (!name) {
       alert("Please enter your name.");
       return;
@@ -264,20 +303,18 @@ async function createRoom() {
     const roomCode = generateRoomCode();
     const playerId = generatePlayerId();
 
-    const roomRef = doc(db, "rooms", roomCode);
-    const playerRef = doc(db, "rooms", roomCode, "players", playerId);
-
-    await setDoc(roomRef, {
+    await setDoc(doc(db, "rooms", roomCode), {
       roomCode,
       hostId: playerId,
       status: "lobby",
       createdAt: serverTimestamp(),
       maxPlayers: 20,
       phase: "lobby",
-      dayNumber: 0
+      dayNumber: 0,
+      publicMessage: "The room is waiting for players."
     });
 
-    await setDoc(playerRef, {
+    await setDoc(doc(db, "rooms", roomCode, "players", playerId), {
       id: playerId,
       name,
       isHost: true,
@@ -327,8 +364,7 @@ async function joinRoom() {
       return;
     }
 
-    const playersRef = collection(db, "rooms", roomCode, "players");
-    const playersSnap = await getDocs(playersRef);
+    const playersSnap = await getDocs(collection(db, "rooms", roomCode, "players"));
 
     if (playersSnap.size >= 20) {
       alert("Room is full.");
@@ -336,9 +372,8 @@ async function joinRoom() {
     }
 
     const playerId = generatePlayerId();
-    const playerRef = doc(db, "rooms", roomCode, "players", playerId);
 
-    await setDoc(playerRef, {
+    await setDoc(doc(db, "rooms", roomCode, "players", playerId), {
       id: playerId,
       name,
       isHost: false,
@@ -373,28 +408,25 @@ function subscribeToRoom(roomCode) {
       return;
     }
 
-    const roomData = snapshot.data();
-    currentRoomData = roomData;
+    currentRoomData = snapshot.data();
 
-    if (roomData.status === "lobby") {
-      roomStatus.textContent = `Status: ${roomData.status}`;
-
-      if (roomData.hostId === currentPlayerId) {
-        startBtn.style.display = "inline-block";
-      } else {
-        startBtn.style.display = "none";
-      }
+    if (currentRoomData.status === "lobby") {
+      roomStatus.textContent = `Status: ${currentRoomData.status}`;
+      startBtn.style.display = currentRoomData.hostId === currentPlayerId ? "inline-block" : "none";
     } else {
       showGameUI(roomCode);
 
-      if (roomData.phase === "night_action") {
-        phaseText.textContent = `Night ${roomData.dayNumber} — Night Action Phase`;
-      } else if (roomData.phase === "night_result") {
-        phaseText.textContent = `Night ${roomData.dayNumber} — Night Result Phase`;
+      if (currentRoomData.phase === "night_action") {
+        phaseText.textContent = `Night ${currentRoomData.dayNumber} — Night Action`;
+      } else if (currentRoomData.phase === "morning") {
+        phaseText.textContent = `Day ${currentRoomData.dayNumber} — Morning`;
+      } else if (currentRoomData.phase === "game_over") {
+        phaseText.textContent = "Game Over";
       } else {
-        phaseText.textContent = `Phase: ${roomData.phase}`;
+        phaseText.textContent = `Phase: ${currentRoomData.phase}`;
       }
 
+      renderPublicMessage();
       renderActionPanel();
     }
   });
@@ -408,22 +440,17 @@ function subscribeToPlayers(roomCode) {
 
   currentUnsubscribePlayers = onSnapshot(playersRef, (snapshot) => {
     const players = [];
-
     snapshot.forEach((playerDoc) => {
-      const player = playerDoc.data();
-      players.push(player);
+      players.push(playerDoc.data());
     });
 
     currentPlayers = players;
 
     playerList.innerHTML = "";
-
     players.forEach((player) => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <span class="${player.isAlive ? "" : "dead-text"}">
-          ${escapeHtml(player.name)}
-        </span>
+        <span class="${player.isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
         ${player.isHost ? '<span class="host-badge"> (Host)</span>' : ""}
       `;
       playerList.appendChild(li);
@@ -431,7 +458,7 @@ function subscribeToPlayers(roomCode) {
 
     renderAlivePlayers(players);
 
-    const me = players.find((player) => player.id === currentPlayerId);
+    const me = getMe();
     if (me && me.role) {
       renderRole(me.role);
     }
@@ -442,41 +469,30 @@ function subscribeToPlayers(roomCode) {
 
 async function startGame() {
   try {
-    if (!currentRoomCode || !currentPlayerId) return;
-
     const roomRef = doc(db, "rooms", currentRoomCode);
     const roomSnap = await getDoc(roomRef);
-
     if (!roomSnap.exists()) return;
 
     const roomData = roomSnap.data();
-
     if (roomData.hostId !== currentPlayerId) {
       alert("Only the host can start the game.");
       return;
     }
 
-    const playersRef = collection(db, "rooms", currentRoomCode, "players");
-    const playersSnap = await getDocs(playersRef);
-
+    const playersSnap = await getDocs(collection(db, "rooms", currentRoomCode, "players"));
     if (playersSnap.size < 2) {
       alert("You need at least 2 players to start.");
       return;
     }
 
-    const players = playersSnap.docs.map((docSnap) => ({
-      ...docSnap.data()
-    }));
-
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
     const shuffledPlayers = shuffleArray(players);
     const murdererId = shuffledPlayers[0].id;
 
     const batch = writeBatch(db);
 
     players.forEach((player) => {
-      const playerRef = doc(db, "rooms", currentRoomCode, "players", player.id);
-
-      batch.update(playerRef, {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
         role: player.id === murdererId ? "murderer" : "villager",
         team: player.id === murdererId ? "murderer" : "village",
         readyForPhase: false,
@@ -488,7 +504,8 @@ async function startGame() {
     batch.update(roomRef, {
       status: "in_progress",
       phase: "night_action",
-      dayNumber: 1
+      dayNumber: 1,
+      publicMessage: "The first night begins."
     });
 
     await batch.commit();
@@ -503,14 +520,12 @@ async function submitNightAction(targetId) {
     const me = getMe();
     if (!me || !me.isAlive) return;
 
-    const playerRef = doc(db, "rooms", currentRoomCode, "players", currentPlayerId);
-
-    await updateDoc(playerRef, {
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
       nightActionTargetId: targetId,
       readyForPhase: true
     });
 
-    await maybeAdvanceNightPhase();
+    await maybeResolveNight();
   } catch (error) {
     console.error("Submit night action failed:", error);
     alert("Night action failed: " + error.message);
@@ -522,21 +537,19 @@ async function markReadyWithoutAction() {
     const me = getMe();
     if (!me || !me.isAlive) return;
 
-    const playerRef = doc(db, "rooms", currentRoomCode, "players", currentPlayerId);
-
-    await updateDoc(playerRef, {
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
       readyForPhase: true,
       nightActionTargetId: null
     });
 
-    await maybeAdvanceNightPhase();
+    await maybeResolveNight();
   } catch (error) {
     console.error("Ready action failed:", error);
     alert("Ready action failed: " + error.message);
   }
 }
 
-async function maybeAdvanceNightPhase() {
+async function maybeResolveNight() {
   try {
     const roomRef = doc(db, "rooms", currentRoomCode);
     const playersRef = collection(db, "rooms", currentRoomCode, "players");
@@ -557,23 +570,145 @@ async function maybeAdvanceNightPhase() {
 
     if (!allReady) return;
 
-    await updateDoc(roomRef, {
-      phase: "night_result"
+    const murderer = alivePlayers.find((player) => player.role === "murderer");
+    const targetId = murderer ? murderer.nightActionTargetId : null;
+    const winnerNow = getWinnerFromPlayers(players);
+
+    const batch = writeBatch(db);
+
+    if (winnerNow) {
+      batch.update(roomRef, {
+        phase: "game_over",
+        publicMessage: winnerNow === "village" ? "Village wins!" : "Murderers win!"
+      });
+      await batch.commit();
+      return;
+    }
+
+    let publicMessage = "No one died tonight.";
+
+    if (targetId) {
+      const target = players.find((player) => player.id === targetId);
+      if (target && target.isAlive) {
+        batch.update(doc(db, "rooms", currentRoomCode, "players", targetId), {
+          isAlive: false,
+          readyForPhase: false
+        });
+        publicMessage = `${target.name} was found dead at dawn.`;
+      }
+    }
+
+    players.forEach((player) => {
+      if (player.isAlive && player.id !== targetId) {
+        batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+          readyForPhase: false
+        });
+      }
     });
+
+    batch.update(roomRef, {
+      phase: "morning",
+      publicMessage
+    });
+
+    await batch.commit();
   } catch (error) {
-    console.error("Advance phase failed:", error);
-    alert("Phase advance failed: " + error.message);
+    console.error("Night resolve failed:", error);
+    alert("Night resolve failed: " + error.message);
+  }
+}
+
+function getWinnerFromPlayers(players) {
+  const aliveMurderers = players.filter((p) => p.isAlive && p.team === "murderer").length;
+  const aliveVillagers = players.filter((p) => p.isAlive && p.team === "village").length;
+
+  if (aliveMurderers === 0) {
+    return "village";
+  }
+
+  if (aliveMurderers >= aliveVillagers) {
+    return "murderer";
+  }
+
+  return null;
+}
+
+async function continueMorning() {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
+      readyForPhase: true
+    });
+
+    await maybeAdvanceAfterMorning();
+  } catch (error) {
+    console.error("Morning continue failed:", error);
+    alert("Morning continue failed: " + error.message);
+  }
+}
+
+async function maybeAdvanceAfterMorning() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const playersRef = collection(db, "rooms", currentRoomCode, "players");
+
+    const [roomSnap, playersSnap] = await Promise.all([
+      getDoc(roomRef),
+      getDocs(playersRef)
+    ]);
+
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.phase !== "morning") return;
+
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+    const winner = getWinnerFromPlayers(players);
+
+    if (winner) {
+      await updateDoc(roomRef, {
+        phase: "game_over",
+        publicMessage: winner === "village" ? "Village wins!" : "Murderers win!"
+      });
+      return;
+    }
+
+    const alivePlayers = players.filter((player) => player.isAlive);
+    const allReady = alivePlayers.every((player) => player.readyForPhase === true);
+
+    if (!allReady) return;
+
+    const batch = writeBatch(db);
+
+    alivePlayers.forEach((player) => {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+        readyForPhase: false,
+        nightActionTargetId: null
+      });
+    });
+
+    batch.update(roomRef, {
+      phase: "night_action",
+      dayNumber: roomData.dayNumber + 1,
+      publicMessage: "Night falls again."
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Advance after morning failed:", error);
+    alert("Advance after morning failed: " + error.message);
   }
 }
 
 async function leaveRoom(showMessage = true) {
   if (currentRoomCode && currentPlayerId) {
-    const roomRef = doc(db, "rooms", currentRoomCode);
-    const playerRef = doc(db, "rooms", currentRoomCode, "players", currentPlayerId);
-
     try {
-      const roomSnap = await getDoc(roomRef);
+      const roomRef = doc(db, "rooms", currentRoomCode);
+      const playerRef = doc(db, "rooms", currentRoomCode, "players", currentPlayerId);
 
+      const roomSnap = await getDoc(roomRef);
       if (roomSnap.exists()) {
         const roomData = roomSnap.data();
 
@@ -585,9 +720,7 @@ async function leaveRoom(showMessage = true) {
           await deleteDoc(roomRef);
         } else if (roomData.hostId === currentPlayerId) {
           const newHost = remainingPlayersSnap.docs[0].data();
-          await updateDoc(roomRef, {
-            hostId: newHost.id
-          });
+          await updateDoc(roomRef, { hostId: newHost.id });
         }
       }
     } catch (error) {
