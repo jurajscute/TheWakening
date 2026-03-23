@@ -380,9 +380,22 @@ async function maybeAdvanceAfterNightResult() {
 
     if (!allReady) return;
 
-    await updateDoc(roomRef, {
-      phase: "morning"
-    });
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+const murderer = players.find((p) => p.isAlive && p.role === "murderer");
+const targetId = murderer ? murderer.nightActionTargetId : null;
+
+let morningMessage = "No one died tonight.";
+if (targetId) {
+  const target = players.find((p) => p.id === targetId);
+  if (target) {
+    morningMessage = `${target.name} was found dead at dawn.`;
+  }
+}
+
+await updateDoc(roomRef, {
+  phase: "morning",
+  publicMessage: morningMessage
+});
   } catch (error) {
     console.error("Advance night result failed:", error);
   }
@@ -604,6 +617,7 @@ async function startGame() {
         readyForPhase: false,
         nightActionTargetId: null,
         voteTargetId: null,
+        privateMessage: ""
         isAlive: true
       });
     });
@@ -722,7 +736,7 @@ players.forEach((player) => {
 
 batch.update(roomRef, {
   phase: "night_result",
-  publicMessage
+  publicMessage: "The night is ending..."
 });
 
     await batch.commit();
