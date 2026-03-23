@@ -74,9 +74,9 @@ const restartBtn = document.getElementById("restartBtn");
 
 function getDefaultRoleSettings() {
   return {
-    murderer: { enabled: true, max: 1 },
-    doctor: { enabled: true, max: 1 },
-    watchman: { enabled: true, max: 1 }
+    murderer: { enabled: true, max: 1, weight: 100 },
+    doctor: { enabled: true, max: 1, weight: 100 },
+    watchman: { enabled: true, max: 1, weight: 100 }
   };
 }
 
@@ -273,20 +273,26 @@ function renderSettingsPanel() {
     row.className = "role-setting-row";
 
     row.innerHTML = `
-      <div class="role-setting-title">${roleLabels[roleKey]}</div>
-      <div class="role-setting-controls">
-        <label>
-          <input type="checkbox" data-role="${roleKey}" data-field="enabled" ${roleSettings.enabled ? "checked" : ""} ${isHost ? "" : "disabled"}>
-          Enabled
-        </label>
-      </div>
-      <div class="role-setting-controls">
-        <label>
-          Max:
-          <input type="number" min="0" max="10" value="${roleSettings.max}" data-role="${roleKey}" data-field="max" ${isHost ? "" : "disabled"}>
-        </label>
-      </div>
-    `;
+  <div class="role-setting-title">${roleLabels[roleKey]}</div>
+  <div class="role-setting-controls">
+    <label>
+      <input type="checkbox" data-role="${roleKey}" data-field="enabled" ${roleSettings.enabled ? "checked" : ""} ${isHost ? "" : "disabled"}>
+      Enabled
+    </label>
+  </div>
+  <div class="role-setting-controls">
+    <label>
+      Max:
+      <input type="number" min="0" max="10" value="${roleSettings.max}" data-role="${roleKey}" data-field="max" ${isHost ? "" : "disabled"}>
+    </label>
+  </div>
+  <div class="role-setting-controls">
+    <label>
+      Weight:
+      <input type="number" min="0" max="1000" value="${roleSettings.weight ?? 0}" data-role="${roleKey}" data-field="weight" ${isHost ? "" : "disabled"}>
+    </label>
+  </div>
+`;
 
     settingsContent.appendChild(row);
   });
@@ -320,8 +326,8 @@ async function handleSettingChange(event) {
     const nextSettings = JSON.parse(JSON.stringify(existing));
 
     if (!nextSettings[role]) {
-      nextSettings[role] = { enabled: false, max: 0 };
-    }
+  nextSettings[role] = { enabled: false, max: 0, weight: 0 };
+}
 
     if (field === "enabled") {
       nextSettings[role].enabled = input.checked;
@@ -335,12 +341,23 @@ async function handleSettingChange(event) {
       nextSettings[role].max = value;
     }
 
+    if (field === "weight") {
+  let value = parseInt(input.value, 10);
+  if (Number.isNaN(value) || value < 0) value = 0;
+  input.value = value;
+  nextSettings[role].weight = value;
+}
+
     if (role === "murderer") {
       nextSettings.murderer.enabled = true;
       if (nextSettings.murderer.max < 1) {
         nextSettings.murderer.max = 1;
       }
     }
+
+    if (nextSettings.murderer.weight == null) {
+  nextSettings.murderer.weight = 100;
+}
 
     await updateDoc(doc(db, "rooms", currentRoomCode), {
       settings: {
@@ -353,12 +370,30 @@ async function handleSettingChange(event) {
   }
 }
 
+function pickWeightedRole(rolePool) {
+  const validRoles = rolePool.filter((role) => role.weight > 0);
+
+  if (validRoles.length === 0) return null;
+
+  const totalWeight = validRoles.reduce((sum, role) => sum + role.weight, 0);
+  let roll = Math.random() * totalWeight;
+
+  for (const role of validRoles) {
+    roll -= role.weight;
+    if (roll <= 0) {
+      return role.key;
+    }
+  }
+
+  return validRoles[validRoles.length - 1].key;
+}
+
 function buildRoleAssignments(players, settings) {
   const shuffledPlayers = shuffleArray(players);
   const assignments = [];
   const remainingPlayers = [...shuffledPlayers];
 
-  const murdererSettings = settings.murderer || { enabled: true, max: 1 };
+  const murdererSettings = settings.murderer || { enabled: true, max: 1, weight: 100 };
   const murdererCount = Math.max(1, murdererSettings.max);
 
   for (let i = 0; i < murdererCount && remainingPlayers.length > 0; i++) {
@@ -370,29 +405,47 @@ function buildRoleAssignments(players, settings) {
     });
   }
 
-  const optionalRoles = ["doctor", "watchman"];
+  const roleCounts = {
+    doctor: 0,
+    watchman: 0
+  };
 
-  optionalRoles.forEach((roleKey) => {
-    const roleSettings = settings[roleKey];
-    if (!roleSettings || !roleSettings.enabled || roleSettings.max <= 0) return;
+  while (remainingPlayers.length > 0) {
+    const rolePool = [];
 
-    for (let i = 0; i < roleSettings.max && remainingPlayers.length > 0; i++) {
-      const player = remainingPlayers.shift();
+    ["doctor", "watchman"].forEach((roleKey) => {
+      const roleSettings = settings[roleKey];
+      if (!roleSettings) return;
+      if (!roleSettings.enabled) return;
+      if (roleCounts[roleKey] >= roleSettings.max) return;
+
+      rolePool.push({
+        key: roleKey,
+        weight: roleSettings.weight ?? 0
+      });
+    });
+
+    const chosenRole = pickWeightedRole(rolePool);
+
+    const player = remainingPlayers.shift();
+
+    if (!chosenRole) {
       assignments.push({
         id: player.id,
-        role: roleKey,
+        role: "villager",
         team: "village"
       });
+      continue;
     }
-  });
 
-  remainingPlayers.forEach((player) => {
+    roleCounts[chosenRole]++;
+
     assignments.push({
       id: player.id,
-      role: "villager",
+      role: chosenRole,
       team: "village"
     });
-  });
+  }
 
   return assignments;
 }
