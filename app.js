@@ -380,21 +380,31 @@ async function maybeAdvanceAfterNightResult() {
 
     if (!allReady) return;
 
-const murderer = players.find((p) => p.isAlive && p.role === "murderer");
-const targetId = murderer ? murderer.nightActionTargetId : null;
+    const murderer = players.find((p) => p.isAlive && p.role === "murderer");
+    const targetId = murderer ? murderer.nightActionTargetId : null;
 
-let morningMessage = "No one died tonight.";
-if (targetId) {
-  const target = players.find((p) => p.id === targetId);
-  if (target) {
-    morningMessage = `${target.name} was found dead at dawn.`;
-  }
-}
+    let morningMessage = "No one died tonight.";
+    if (targetId) {
+      const target = players.find((p) => p.id === targetId);
+      if (target) {
+        morningMessage = `${target.name} was found dead at dawn.`;
+      }
+    }
 
-await updateDoc(roomRef, {
-  phase: "morning",
-  publicMessage: morningMessage
-});
+    const batch = writeBatch(db);
+
+    alivePlayers.forEach((player) => {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+        readyForPhase: false
+      });
+    });
+
+    batch.update(roomRef, {
+      phase: "morning",
+      publicMessage: morningMessage
+    });
+
+    await batch.commit();
   } catch (error) {
     console.error("Advance night result failed:", error);
   }
