@@ -389,3 +389,173 @@ button:disabled {
   margin-top: -4px;
   margin-bottom: 10px;
 }
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.9fr);
+  gap: 22px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.game-main-column,
+.game-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.game-main-column .panel,
+.game-side-column .panel,
+.game-main-column .role-card {
+  margin-top: 0;
+}
+
+.players-panel {
+  position: sticky;
+  top: 20px;
+}
+
+#roleName {
+  font-size: 34px;
+  font-weight: bold;
+  margin: 4px 0 8px;
+  color: var(--gold);
+}
+
+#roleTeam {
+  margin: 0 0 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 13px;
+}
+
+#roleDescription {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+#publicMessageText,
+#actionText {
+  max-width: 60ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#alivePlayerList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+#alivePlayerList li::before {
+  content: "◆";
+  color: var(--gold);
+  opacity: 0.8;
+  margin-right: 10px;
+}
+
+#playerList li,
+#alivePlayerList li,
+#finalRoleList li {
+  text-align: left;
+}
+
+#actionControls {
+  margin-top: 14px;
+}
+
+#actionControls:empty {
+  display: none;
+}
+
+#settingsPanel {
+  text-align: left;
+}
+
+#settingsPanel h3 {
+  text-align: center;
+}
+
+#room h3 {
+  margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .players-panel {
+    position: static;
+  }
+}
+
+.room-button-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.menu-card {
+  width: min(560px, 94vw);
+  margin: 26px auto 0;
+  padding: 24px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  box-shadow: var(--shadow);
+}
+
+.menu-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.menu-row input {
+  margin: 0;
+}
+
+.menu-row button {
+  margin: 0;
+}
+
+.menu-divider {
+  margin: 16px 0;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+#playerList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#playerList li::before {
+  content: "✦";
+  color: var(--gold);
+  opacity: 0.8;
+  margin-right: 10px;
+}
+
+.role-setting-row input[type="checkbox"] {
+  transform: scale(1.1);
+  accent-color: #9a2a2a;
+  margin-right: 6px;
+}
+
+.role-setting-row input[type="number"] {
+  margin-left: 6px;
+}

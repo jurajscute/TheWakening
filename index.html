@@ -11,10 +11,19 @@
     <h1>The Wakening</h1>
 
     <div id="menu">
-      <input id="nameInput" placeholder="Enter your name" />
-      <button id="createBtn">Create Room</button>
-      <input id="roomInput" placeholder="Room Code" />
-      <button id="joinBtn">Join Room</button>
+      <div class="menu-card">
+  <div class="menu-row">
+    <input id="nameInput" placeholder="Enter your name" />
+  </div>
+  <div class="menu-row">
+    <button id="createBtn">Create Room</button>
+  </div>
+  <div class="menu-divider">or</div>
+  <div class="menu-row">
+    <input id="roomInput" placeholder="Room Code" />
+    <button id="joinBtn">Join Room</button>
+  </div>
+</div>
     </div>
 
     <div id="room" style="display:none;">
@@ -29,8 +38,10 @@
       <h3>Players</h3>
       <ul id="playerList"></ul>
 
-      <button id="startBtn" style="display:none;">Start Game</button>
-      <button id="leaveBtn">Leave Room</button>
+      <div class="room-button-row">
+  <button id="startBtn" style="display:none;">Start Game</button>
+  <button id="leaveBtn">Leave Room</button>
+</div>
     </div>
 
     <div id="game" style="display:none;">
@@ -41,46 +52,52 @@
   </div>
 
   <h2>Room: <span id="gameRoomCode"></span></h2>
-  <p id="phaseText"></p>
+<p id="phaseText"></p>
 
-      <div id="roleCard" class="role-card">
-        <h3>Your Role</h3>
-        <p id="roleName">Unknown</p>
-        <p id="roleTeam"></p>
-        <p id="roleDescription"></p>
-      </div>
+<div class="game-layout">
+  <div class="game-main-column">
+    <div id="roleCard" class="role-card">
+      <h3>Your Role</h3>
+      <p id="roleName">Unknown</p>
+      <p id="roleTeam"></p>
+      <p id="roleDescription"></p>
+    </div>
 
-      <div id="messagePanel" class="panel">
-        <h3>Public Message</h3>
-        <p id="publicMessageText"></p>
-      </div>
+    <div id="messagePanel" class="panel">
+      <h3>Public Message</h3>
+      <p id="publicMessageText"></p>
+    </div>
 
-      <div id="actionPanel" class="panel">
-  <h3>Phase Action</h3>
-  <p id="actionText"></p>
-  <div id="actionControls"></div>
-</div>
-
-      <div id="winScreen">
-  <div id="winScreenContent">
-  <h2 id="winTitle">Game Over</h2>
-  <p id="winSubtitle"></p>
-  <p id="winYourRole"></p>
-  <p id="winExtra"></p>
-
-  <div class="panel">
-    <h3>Final Roles</h3>
-    <ul id="finalRoleList"></ul>
+    <div id="actionPanel" class="panel">
+      <h3>Phase Action</h3>
+      <p id="actionText"></p>
+      <div id="actionControls"></div>
+    </div>
   </div>
 
-  <button id="restartBtn" style="display:none;">Restart To Lobby</button>
-</div>
+  <div class="game-side-column">
+    <div class="panel players-panel">
+      <h3>Players</h3>
+      <ul id="alivePlayerList"></ul>
+    </div>
+  </div>
 </div>
 
-      <div class="panel">
-        <h3>Players</h3>
-        <ul id="alivePlayerList"></ul>
-      </div>
+<div id="winScreen">
+  <div id="winScreenContent">
+    <h2 id="winTitle">Game Over</h2>
+    <p id="winSubtitle"></p>
+    <p id="winYourRole"></p>
+    <p id="winExtra"></p>
+
+    <div class="panel">
+      <h3>Final Roles</h3>
+      <ul id="finalRoleList"></ul>
+    </div>
+
+    <button id="restartBtn" style="display:none;">Restart To Lobby</button>
+  </div>
+</div>
     </div>
   </div>
 
