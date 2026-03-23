@@ -83,7 +83,8 @@ function getDefaultRoleSettings() {
     murderer: { enabled: true, max: 1, weight: 100 },
     doctor: { enabled: true, max: 1, weight: 100 },
     watchman: { enabled: true, max: 1, weight: 100 },
-    executioner: { enabled: true, max: 1, weight: 50 }
+    executioner: { enabled: true, max: 1, weight: 50 },
+    hysteric: { enabled: true, max: 1, weight: 50 }
   };
 }
 
@@ -114,7 +115,7 @@ function getRoleInfo(role) {
     return {
       name: "Murderer",
       team: "Murderer Team",
-      description: "Each night, you choose a player to kill. You win when murderers equal or outnumber villagers.",
+      description: "Each night, you choose a player to kill. You win when murderers equal or outnumber all non-murderers.",
       className: "role-murderer"
     };
   }
@@ -142,6 +143,15 @@ function getRoleInfo(role) {
       name: "Executioner",
       team: "Neutral",
       description: "You win if your assigned target is voted out.",
+      className: "role-villager"
+    };
+  }
+
+  if (role === "hysteric") {
+    return {
+      name: "Hysteric",
+      team: "Neutral",
+      description: "You win if you are voted out.",
       className: "role-villager"
     };
   }
@@ -295,7 +305,8 @@ function renderSettingsPanel() {
   murderer: "Murderer",
   doctor: "Doctor",
   watchman: "Watchman",
-  executioner: "Executioner"
+  executioner: "Executioner",
+  hysteric: "Hysteric"
 };
 
   Object.keys(roleLabels).forEach((roleKey) => {
@@ -440,13 +451,14 @@ function buildRoleAssignments(players, settings) {
   const roleCounts = {
     doctor: 0,
     watchman: 0,
-    executioner: 0
+    executioner: 0,
+    hysteric: 0
   };
 
   while (remainingPlayers.length > 0) {
     const rolePool = [];
 
-    ["doctor", "watchman", "executioner"].forEach((roleKey) => {
+    ["doctor", "watchman", "executioner", "hysteric"].forEach((roleKey) => {
       const roleSettings = settings[roleKey];
       if (!roleSettings) return;
       if (!roleSettings.enabled) return;
@@ -475,7 +487,10 @@ function buildRoleAssignments(players, settings) {
     assignments.push({
       id: player.id,
       role: chosenRole,
-      team: chosenRole === "executioner" ? "neutral" : "village"
+      team:
+        chosenRole === "executioner" || chosenRole === "hysteric"
+          ? "neutral"
+          : "village"
     });
   }
 
@@ -1177,7 +1192,9 @@ async function maybeResolveNight() {
             message = `${target.name} is a ${target.role}.`;
           }
         }
-      } else if (player.role === "executioner") {
+      } else if (player.role === "hysteric") {
+  message = "You crave the rope, the fire, the fall. You must be voted out.";
+} else if (player.role === "executioner") {
   const target = players.find((p) => p.id === player.executionerTargetId);
   if (target) {
     message = `Your target is ${target.name}. Get them voted out.`;
@@ -1305,6 +1322,16 @@ function getExecutionerWinners(players, eliminatedPlayerId, cause) {
   );
 }
 
+function getHystericWinners(players, eliminatedPlayerId, cause) {
+  if (cause !== "vote") return [];
+
+  return players.filter(
+    (player) =>
+      player.role === "hysteric" &&
+      player.id === eliminatedPlayerId
+  );
+}
+
 async function maybeResolveVoting() {
   try {
     const roomRef = doc(db, "rooms", currentRoomCode);
@@ -1371,8 +1398,28 @@ async function maybeResolveVoting() {
       }
     }
 
-    const executionerWinners = getExecutionerWinners(players, eliminatedPlayerId, "vote");
+    const hystericWinners = getHystericWinners(players, eliminatedPlayerId, "vote");
+    if (hystericWinners.length > 0) {
+      const winnerNames = hystericWinners.map((p) => p.name).join(", ");
 
+      players.forEach((player) => {
+        batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+          readyForPhase: false
+        });
+      });
+
+      batch.update(roomRef, {
+        phase: "game_over",
+        publicMessage,
+        winner: "hysteric",
+        winnerText: `${winnerNames} won as Hysteric!`
+      });
+
+      await batch.commit();
+      return;
+    }
+
+    const executionerWinners = getExecutionerWinners(players, eliminatedPlayerId, "vote");
     if (executionerWinners.length > 0) {
       const winnerNames = executionerWinners.map((p) => p.name).join(", ");
 
