@@ -67,6 +67,7 @@ const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
 const startBtn = document.getElementById("startBtn");
 const leaveBtn = document.getElementById("leaveBtn");
+const restartBtn = document.getElementById("restartBtn");
 
 function generateRoomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -91,6 +92,16 @@ function shuffleArray(array) {
 }
 
 function getRoleInfo(role) {
+
+  if (role === "watchman") {
+  return {
+    name: "Watchman",
+    team: "Village Team",
+    description: "Each night, you investigate a player and learn their role.",
+    className: "role-villager"
+  };
+}
+
   if (role === "murderer") {
     return {
       name: "Murderer",
@@ -144,6 +155,7 @@ function showMenuUI() {
   actionText.textContent = "";
   actionControls.innerHTML = "";
   startBtn.style.display = "none";
+  restartBtn.style.display = "none";
 }
 
 function cleanupListeners() {
@@ -267,6 +279,18 @@ function renderActionPanel() {
     btn.textContent = `Protect: ${target.name}`;
     btn.className = "player-action-button";
     btn.addEventListener("click", () => submitDoctorAction(target.id));
+    actionControls.appendChild(btn);
+  });
+} else if (me.role === "watchman") {
+  actionText.textContent = "Choose a player to investigate.";
+
+  const targets = getAliveOtherPlayers();
+
+  targets.forEach((target) => {
+    const btn = document.createElement("button");
+    btn.textContent = `Investigate: ${target.name}`;
+    btn.className = "player-action-button";
+    btn.addEventListener("click", () => submitWatchmanAction(target.id));
     actionControls.appendChild(btn);
   });
 } else {
@@ -437,6 +461,22 @@ async function maybeAdvanceAfterNightResult() {
   }
 }
 
+async function submitWatchmanAction(targetId) {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
+      investigateTargetId: targetId,
+      readyForPhase: true
+    });
+
+    await maybeResolveNight();
+  } catch (error) {
+    console.error("Watchman action failed:", error);
+  }
+}
+
 async function createRoom() {
   try {
     const name = nameInput.value.trim();
@@ -472,6 +512,7 @@ async function createRoom() {
       voteTargetId: null,
       privateMessage: "",
       protectTargetId: null,
+      investigateTargetId: null,
     });
 
     currentRoomCode = roomCode;
@@ -534,6 +575,7 @@ async function joinRoom() {
       voteTargetId: null,
       privateMessage: "",
       protectTargetId: null,
+      investigateTargetId: null,
     });
 
     currentRoomCode = roomCode;
@@ -585,6 +627,17 @@ function subscribeToRoom(roomCode) {
 
       renderPublicMessage();
       renderActionPanel();
+
+      const me = getMe();
+if (
+  currentRoomData.phase === "game_over" &&
+  me &&
+  me.isHost
+) {
+  restartBtn.style.display = "inline-block";
+} else {
+  restartBtn.style.display = "none";
+}
     }
   });
 }
@@ -624,6 +677,36 @@ function subscribeToPlayers(roomCode) {
   });
 }
 
+function buildRoleAssignments(players) {
+  const shuffledPlayers = shuffleArray(players);
+
+  const murdererId = shuffledPlayers[0]?.id || null;
+  const doctorId = players.length >= 3 ? shuffledPlayers[1]?.id : null;
+  const watchmanId = players.length >= 4 ? shuffledPlayers[2]?.id : null;
+
+  return players.map((player) => {
+    let role = "villager";
+    let team = "village";
+
+    if (player.id === murdererId) {
+      role = "murderer";
+      team = "murderer";
+    } else if (doctorId && player.id === doctorId) {
+      role = "doctor";
+      team = "village";
+    } else if (watchmanId && player.id === watchmanId) {
+      role = "watchman";
+      team = "village";
+    }
+
+    return {
+      id: player.id,
+      role,
+      team
+    };
+  });
+}
+
 async function startGame() {
   try {
     const roomRef = doc(db, "rooms", currentRoomCode);
@@ -643,35 +726,23 @@ async function startGame() {
     }
 
     const players = playersSnap.docs.map((docSnap) => docSnap.data());
-    const shuffledPlayers = shuffleArray(players);
-const murdererId = shuffledPlayers[0].id;
-const doctorId = players.length >= 3 ? shuffledPlayers[1].id : null;
+    const roleAssignments = buildRoleAssignments(players);
 
-const batch = writeBatch(db);
+    const batch = writeBatch(db);
 
-players.forEach((player) => {
-  let role = "villager";
-  let team = "village";
-
-  if (player.id === murdererId) {
-    role = "murderer";
-    team = "murderer";
-  } else if (doctorId && player.id === doctorId) {
-    role = "doctor";
-    team = "village";
-  }
-
-  batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-    role,
-    team,
-    readyForPhase: false,
-    nightActionTargetId: null,
-    protectTargetId: null,
-    voteTargetId: null,
-    privateMessage: "",
-    isAlive: true
-  });
-});
+    roleAssignments.forEach((assignment) => {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", assignment.id), {
+        role: assignment.role,
+        team: assignment.team,
+        readyForPhase: false,
+        nightActionTargetId: null,
+        protectTargetId: null,
+        investigateTargetId: null,
+        voteTargetId: null,
+        privateMessage: "",
+        isAlive: true
+      });
+    });
 
     batch.update(roomRef, {
       status: "in_progress",
@@ -684,6 +755,57 @@ players.forEach((player) => {
   } catch (error) {
     console.error("Start game failed:", error);
     alert("Start game failed: " + error.message);
+  }
+}
+
+async function restartGame() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.hostId !== currentPlayerId) {
+      alert("Only the host can restart the game.");
+      return;
+    }
+
+    const playersSnap = await getDocs(collection(db, "rooms", currentRoomCode, "players"));
+    if (playersSnap.size < 2) {
+      alert("You need at least 2 players to restart.");
+      return;
+    }
+
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+    const roleAssignments = buildRoleAssignments(players);
+
+    const batch = writeBatch(db);
+
+    roleAssignments.forEach((assignment) => {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", assignment.id), {
+        role: assignment.role,
+        team: assignment.team,
+        isAlive: true,
+        readyForPhase: false,
+        nightActionTargetId: null,
+        protectTargetId: null,
+        investigateTargetId: null,
+        voteTargetId: null,
+        privateMessage: ""
+      });
+    });
+
+    batch.update(roomRef, {
+      status: "in_progress",
+      phase: "night_action",
+      dayNumber: 1,
+      publicMessage: "A new game begins."
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Restart game failed:", error);
+    alert("Restart game failed: " + error.message);
   }
 }
 
@@ -761,7 +883,10 @@ async function maybeResolveNight() {
 
     const murderer = alivePlayers.find((player) => player.role === "murderer");
     const doctor = alivePlayers.find((player) => player.role === "doctor");
-
+    const watchman = alivePlayers.find((p) => p.role === "watchman");
+    
+    const investigatedId = watchman ? watchman.investigateTargetId : null;
+    
     const targetId = murderer ? murderer.nightActionTargetId : null;
     const protectedId = doctor ? doctor.protectTargetId : null;
 
@@ -803,7 +928,16 @@ async function maybeResolveNight() {
         } else {
           message = "Your protection was not needed.";
         }
-      } else {
+      } else if (player.role === "watchman") {
+  if (!investigatedId) {
+    message = "You did not investigate anyone.";
+  } else {
+    const target = players.find((p) => p.id === investigatedId);
+    if (target) {
+      message = `${target.name} is a ${target.role}.`;
+    }
+  }
+} else {
         message = "You survived the night.";
       }
 
@@ -1099,6 +1233,7 @@ async function leaveRoom(showMessage = true) {
   }
 }
 
+restartBtn.addEventListener("click", restartGame);
 createBtn.addEventListener("click", createRoom);
 joinBtn.addEventListener("click", joinRoom);
 startBtn.addEventListener("click", startGame);
