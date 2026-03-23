@@ -85,7 +85,8 @@ button:hover {
 }
 
 #roomStatus,
-#phaseText {
+#phaseText,
+#actionText {
   color: #caa27f;
   font-style: italic;
 }
@@ -111,4 +112,16 @@ button:hover {
 
 .panel {
   margin-top: 20px;
+}
+
+.player-action-button {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 10px auto;
+}
+
+.ready-text {
+  color: #9ed39e;
+  font-weight: bold;
 }

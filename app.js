@@ -38,6 +38,8 @@ let currentPlayerId = null;
 let currentPlayerName = null;
 let currentUnsubscribePlayers = null;
 let currentUnsubscribeRoom = null;
+let currentPlayers = [];
+let currentRoomData = null;
 
 const menu = document.getElementById("menu");
 const roomScreen = document.getElementById("room");
@@ -54,6 +56,10 @@ const roleCard = document.getElementById("roleCard");
 const roleName = document.getElementById("roleName");
 const roleTeam = document.getElementById("roleTeam");
 const roleDescription = document.getElementById("roleDescription");
+
+const actionPanel = document.getElementById("actionPanel");
+const actionText = document.getElementById("actionText");
+const actionControls = document.getElementById("actionControls");
 
 const nameInput = document.getElementById("nameInput");
 const roomInput = document.getElementById("roomInput");
@@ -125,6 +131,8 @@ function showMenuUI() {
   roomStatus.textContent = "";
   playerList.innerHTML = "";
   alivePlayerList.innerHTML = "";
+  actionText.textContent = "";
+  actionControls.innerHTML = "";
   startBtn.style.display = "none";
 }
 
@@ -143,6 +151,8 @@ function resetLocalState() {
   currentRoomCode = null;
   currentPlayerId = null;
   currentPlayerName = null;
+  currentPlayers = [];
+  currentRoomData = null;
 }
 
 function escapeHtml(text) {
@@ -171,6 +181,75 @@ function renderRole(role) {
 
   roleCard.className = "role-card";
   roleCard.classList.add(info.className);
+}
+
+function getMe() {
+  return currentPlayers.find((player) => player.id === currentPlayerId) || null;
+}
+
+function getAlivePlayers() {
+  return currentPlayers.filter((player) => player.isAlive);
+}
+
+function getAliveOtherPlayers() {
+  return currentPlayers.filter(
+    (player) => player.isAlive && player.id !== currentPlayerId
+  );
+}
+
+function renderActionPanel() {
+  actionControls.innerHTML = "";
+
+  if (!currentRoomData) return;
+
+  const me = getMe();
+  if (!me) return;
+
+  if (!me.isAlive) {
+    actionText.textContent = "You are dead and cannot act.";
+    return;
+  }
+
+  if (currentRoomData.phase !== "night_action") {
+    actionText.textContent = "Waiting for the next phase...";
+    return;
+  }
+
+  if (me.readyForPhase) {
+    actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
+    return;
+  }
+
+  if (me.role === "murderer") {
+    actionText.textContent = "Choose a player to kill tonight.";
+
+    const targets = getAliveOtherPlayers();
+
+    if (targets.length === 0) {
+      const btn = document.createElement("button");
+      btn.textContent = "No valid targets";
+      btn.disabled = true;
+      btn.className = "player-action-button";
+      actionControls.appendChild(btn);
+      return;
+    }
+
+    targets.forEach((target) => {
+      const btn = document.createElement("button");
+      btn.textContent = target.name;
+      btn.className = "player-action-button";
+      btn.addEventListener("click", () => submitNightAction(target.id));
+      actionControls.appendChild(btn);
+    });
+  } else {
+    actionText.textContent = "You have no night action. Click continue when ready.";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Continue";
+    btn.className = "player-action-button";
+    btn.addEventListener("click", markReadyWithoutAction);
+    actionControls.appendChild(btn);
+  }
 }
 
 async function createRoom() {
@@ -205,7 +284,9 @@ async function createRoom() {
       isAlive: true,
       joinedAt: serverTimestamp(),
       role: null,
-      team: null
+      team: null,
+      readyForPhase: false,
+      nightActionTargetId: null
     });
 
     currentRoomCode = roomCode;
@@ -264,7 +345,9 @@ async function joinRoom() {
       isAlive: true,
       joinedAt: serverTimestamp(),
       role: null,
-      team: null
+      team: null,
+      readyForPhase: false,
+      nightActionTargetId: null
     });
 
     currentRoomCode = roomCode;
@@ -291,6 +374,7 @@ function subscribeToRoom(roomCode) {
     }
 
     const roomData = snapshot.data();
+    currentRoomData = roomData;
 
     if (roomData.status === "lobby") {
       roomStatus.textContent = `Status: ${roomData.status}`;
@@ -305,9 +389,13 @@ function subscribeToRoom(roomCode) {
 
       if (roomData.phase === "night_action") {
         phaseText.textContent = `Night ${roomData.dayNumber} — Night Action Phase`;
+      } else if (roomData.phase === "night_result") {
+        phaseText.textContent = `Night ${roomData.dayNumber} — Night Result Phase`;
       } else {
         phaseText.textContent = `Phase: ${roomData.phase}`;
       }
+
+      renderActionPanel();
     }
   });
 }
@@ -325,6 +413,8 @@ function subscribeToPlayers(roomCode) {
       const player = playerDoc.data();
       players.push(player);
     });
+
+    currentPlayers = players;
 
     playerList.innerHTML = "";
 
@@ -345,6 +435,8 @@ function subscribeToPlayers(roomCode) {
     if (me && me.role) {
       renderRole(me.role);
     }
+
+    renderActionPanel();
   });
 }
 
@@ -373,7 +465,6 @@ async function startGame() {
     }
 
     const players = playersSnap.docs.map((docSnap) => ({
-      docId: docSnap.id,
       ...docSnap.data()
     }));
 
@@ -385,17 +476,13 @@ async function startGame() {
     players.forEach((player) => {
       const playerRef = doc(db, "rooms", currentRoomCode, "players", player.id);
 
-      if (player.id === murdererId) {
-        batch.update(playerRef, {
-          role: "murderer",
-          team: "murderer"
-        });
-      } else {
-        batch.update(playerRef, {
-          role: "villager",
-          team: "village"
-        });
-      }
+      batch.update(playerRef, {
+        role: player.id === murdererId ? "murderer" : "villager",
+        team: player.id === murdererId ? "murderer" : "village",
+        readyForPhase: false,
+        nightActionTargetId: null,
+        isAlive: true
+      });
     });
 
     batch.update(roomRef, {
@@ -408,6 +495,74 @@ async function startGame() {
   } catch (error) {
     console.error("Start game failed:", error);
     alert("Start game failed: " + error.message);
+  }
+}
+
+async function submitNightAction(targetId) {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    const playerRef = doc(db, "rooms", currentRoomCode, "players", currentPlayerId);
+
+    await updateDoc(playerRef, {
+      nightActionTargetId: targetId,
+      readyForPhase: true
+    });
+
+    await maybeAdvanceNightPhase();
+  } catch (error) {
+    console.error("Submit night action failed:", error);
+    alert("Night action failed: " + error.message);
+  }
+}
+
+async function markReadyWithoutAction() {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    const playerRef = doc(db, "rooms", currentRoomCode, "players", currentPlayerId);
+
+    await updateDoc(playerRef, {
+      readyForPhase: true,
+      nightActionTargetId: null
+    });
+
+    await maybeAdvanceNightPhase();
+  } catch (error) {
+    console.error("Ready action failed:", error);
+    alert("Ready action failed: " + error.message);
+  }
+}
+
+async function maybeAdvanceNightPhase() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const playersRef = collection(db, "rooms", currentRoomCode, "players");
+
+    const [roomSnap, playersSnap] = await Promise.all([
+      getDoc(roomRef),
+      getDocs(playersRef)
+    ]);
+
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.phase !== "night_action") return;
+
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+    const alivePlayers = players.filter((player) => player.isAlive);
+    const allReady = alivePlayers.every((player) => player.readyForPhase === true);
+
+    if (!allReady) return;
+
+    await updateDoc(roomRef, {
+      phase: "night_result"
+    });
+  } catch (error) {
+    console.error("Advance phase failed:", error);
+    alert("Phase advance failed: " + error.message);
   }
 }
 
