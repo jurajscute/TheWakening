@@ -518,6 +518,8 @@ function subscribeToRoom(roomCode) {
 
       if (currentRoomData.phase === "night_action") {
         phaseText.textContent = `Night ${currentRoomData.dayNumber} — Night Action`;
+      } else if (currentRoomData.phase === "night_result") {
+        phaseText.textContent = `Night ${currentRoomData.dayNumber} — Results`;
       } else if (currentRoomData.phase === "morning") {
         phaseText.textContent = `Day ${currentRoomData.dayNumber} — Morning`;
       } else if (currentRoomData.phase === "voting") {
@@ -528,9 +530,7 @@ function subscribeToRoom(roomCode) {
         phaseText.textContent = "Game Over";
       } else {
         phaseText.textContent = `Phase: ${currentRoomData.phase}`;
-      } else if (currentRoomData.phase === "night_result") {
-  phaseText.textContent = `Night ${currentRoomData.dayNumber} — Results`;
-}
+      } 
 
       renderPublicMessage();
       renderActionPanel();
