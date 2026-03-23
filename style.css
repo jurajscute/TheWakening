@@ -1,37 +1,87 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0a0a0a;
-  color: #e6dede;
+  font-family: Georgia, serif;
+  background: linear-gradient(to bottom, #090707, #16100d);
+  color: #f0e6d2;
   text-align: center;
+  min-height: 100vh;
 }
 
 #app {
-  padding: 40px;
+  padding: 40px 20px;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 h1 {
-  color: #8b0000;
-  font-size: 48px;
+  color: #8b1e1e;
+  font-size: 52px;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+}
+
+h2, h3 {
+  color: #d3b08c;
 }
 
 input {
-  padding: 10px;
-  margin: 10px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  color: white;
+  padding: 12px;
+  margin: 8px;
+  background: #1a1512;
+  border: 1px solid #4b3428;
+  color: #f5ede3;
+  border-radius: 6px;
+  width: 220px;
 }
 
 button {
-  padding: 10px 20px;
-  margin: 10px;
-  background: #8b0000;
-  border: none;
+  padding: 12px 18px;
+  margin: 8px;
+  background: #6d1414;
+  border: 1px solid #a44;
   color: white;
+  border-radius: 6px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 button:hover {
-  background: #b30000;
+  background: #8c1b1b;
+}
+
+#room {
+  margin-top: 30px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #3b2b22;
+  border-radius: 12px;
+}
+
+#playerList {
+  list-style: none;
+  padding: 0;
+  margin: 20px auto;
+  max-width: 420px;
+}
+
+#playerList li {
+  background: rgba(255, 255, 255, 0.04);
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #33241d;
+}
+
+.host-badge {
+  color: #ffcc88;
+  font-weight: bold;
+}
+
+.dead-text {
+  opacity: 0.6;
+}
+
+#roomStatus {
+  color: #caa27f;
+  font-style: italic;
 }
