@@ -380,7 +380,6 @@ async function maybeAdvanceAfterNightResult() {
 
     if (!allReady) return;
 
-    const players = playersSnap.docs.map((docSnap) => docSnap.data());
 const murderer = players.find((p) => p.isAlive && p.role === "murderer");
 const targetId = murderer ? murderer.nightActionTargetId : null;
 
