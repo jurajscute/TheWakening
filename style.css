@@ -216,3 +216,19 @@ button:disabled {
 .win-screen-show {
   display: block !important;
 }
+
+#finalRoleList {
+  list-style: none;
+  padding: 0;
+  margin: 16px auto 0;
+  max-width: 420px;
+}
+
+#finalRoleList li {
+  background: rgba(255, 255, 255, 0.05);
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #33241d;
+  color: #f0e6d2;
+}

@@ -72,6 +72,8 @@ const winSubtitle = document.getElementById("winSubtitle");
 const winYourRole = document.getElementById("winYourRole");
 const winExtra = document.getElementById("winExtra");
 
+const finalRoleList = document.getElementById("finalRoleList");
+
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
 const startBtn = document.getElementById("startBtn");
@@ -497,6 +499,62 @@ function buildRoleAssignments(players, settings) {
   return assignments;
 }
 
+async function continueRoleReveal() {
+  try {
+    const me = getMe();
+    if (!me) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
+      readyForPhase: true
+    });
+
+    await maybeAdvanceAfterRoleReveal();
+  } catch (error) {
+    console.error("Role reveal continue failed:", error);
+    alert("Role reveal continue failed: " + error.message);
+  }
+}
+
+async function maybeAdvanceAfterRoleReveal() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const playersRef = collection(db, "rooms", currentRoomCode, "players");
+
+    const [roomSnap, playersSnap] = await Promise.all([
+      getDoc(roomRef),
+      getDocs(playersRef)
+    ]);
+
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.phase !== "role_reveal") return;
+
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+    const allReady = players.every((player) => player.readyForPhase === true);
+
+    if (!allReady) return;
+
+    const batch = writeBatch(db);
+
+    players.forEach((player) => {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+        readyForPhase: false
+      });
+    });
+
+    batch.update(roomRef, {
+      phase: "night_action",
+      publicMessage: "The first night begins."
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Advance after role reveal failed:", error);
+    alert("Advance after role reveal failed: " + error.message);
+  }
+}
+
 function renderActionPanel() {
   actionControls.innerHTML = "";
 
@@ -509,6 +567,22 @@ function renderActionPanel() {
     actionText.textContent = "You are dead and can no longer act.";
     return;
   }
+
+if (currentRoomData.phase === "role_reveal") {
+  if (me.readyForPhase) {
+    actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
+    return;
+  }
+
+  actionText.textContent = "Read your role carefully, then continue.";
+
+  const btn = document.createElement("button");
+  btn.textContent = "Continue";
+  btn.className = "player-action-button";
+  btn.addEventListener("click", continueRoleReveal);
+  actionControls.appendChild(btn);
+  return;
+}
 
   if (currentRoomData.phase === "night_action") {
     if (me.readyForPhase) {
@@ -856,7 +930,9 @@ function subscribeToRoom(roomCode) {
     } else {
       showGameUI(roomCode);
 
-      if (currentRoomData.phase === "night_action") {
+      if (currentRoomData.phase === "role_reveal") {
+        phaseText.textContent = "Role Reveal";
+      } else if (currentRoomData.phase === "night_action") {
         phaseText.textContent = `Night ${currentRoomData.dayNumber} — Night Action`;
       } else if (currentRoomData.phase === "night_result") {
         phaseText.textContent = `Night ${currentRoomData.dayNumber} — Results`;
@@ -987,13 +1063,13 @@ async function startGame() {
     });
 
     batch.update(roomRef, {
-      status: "in_progress",
-      phase: "night_action",
-      dayNumber: 1,
-      publicMessage: "The first night begins.",
-      winner: null,
-      winnerText: ""
-    });
+  status: "in_progress",
+  phase: "role_reveal",
+  dayNumber: 1,
+  publicMessage: "Learn your role before the first night begins.",
+  winner: null,
+  winnerText: ""
+});
 
     await batch.commit();
   } catch (error) {
@@ -1557,6 +1633,24 @@ function renderWinScreen() {
   } else {
     winExtra.textContent = "";
   }
+
+  finalRoleList.innerHTML = "";
+
+  currentPlayers.forEach((player) => {
+    const info = getRoleInfo(player.role || "villager");
+    const li = document.createElement("li");
+
+    let extra = "";
+    if (player.role === "executioner" && player.executionerTargetId) {
+      const target = currentPlayers.find((p) => p.id === player.executionerTargetId);
+      if (target) {
+        extra = ` — Target: ${target.name}`;
+      }
+    }
+
+    li.textContent = `${player.name} — ${info.name}${extra}`;
+    finalRoleList.appendChild(li);
+  });
 
   if (me && me.isHost) {
     restartBtn.style.display = "inline-block";
