@@ -1,0 +1,37 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0a0a0a;
+  color: #e6dede;
+  text-align: center;
+}
+
+#app {
+  padding: 40px;
+}
+
+h1 {
+  color: #8b0000;
+  font-size: 48px;
+}
+
+input {
+  padding: 10px;
+  margin: 10px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: white;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 10px;
+  background: #8b0000;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #b30000;
+}
