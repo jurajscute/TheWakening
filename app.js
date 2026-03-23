@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore,
+  initializeFirestore,
   doc,
   setDoc,
   getDoc,
@@ -14,24 +14,26 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// =====================================
-// 1. PASTE YOUR FIREBASE CONFIG HERE
-// =====================================
 const firebaseConfig = {
-  apiKey: "AIzaSyBQpkKgqM9Jse1ju39S_DRcyst3Jf_h4iY",
-  authDomain: "the-wakening.firebaseapp.com",
-  projectId: "the-wakening",
-  storageBucket: "the-wakening.firebasestorage.app",
-  messagingSenderId: "349435615649",
-  appId: "1:349435615649:web:73d0f1a7b8da8ef214d3e0",
-  measurementId: "G-ZPBLWY5TF9"
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_ID",
+  appId: "YOUR_APP_ID"
 };
 
-// =====================================
-// 2. FIREBASE SETUP
-// =====================================
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true
+});
+
+// If needed later, swap to:
+// const db = initializeFirestore(app, {
+//   experimentalForceLongPolling: true,
+//   useFetchStreams: false
+// });
 
 // =====================================
 // 3. GAME STATE
