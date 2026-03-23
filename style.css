@@ -1,3 +1,144 @@
+body {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: linear-gradient(to bottom, #090707, #16100d);
+  color: #f0e6d2;
+  text-align: center;
+  min-height: 100vh;
+}
+
+#app {
+  padding: 40px 20px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+h1 {
+  color: #8b1e1e;
+  font-size: 52px;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+}
+
+h2, h3 {
+  color: #d3b08c;
+}
+
+input {
+  padding: 12px;
+  margin: 8px;
+  background: #1a1512;
+  border: 1px solid #4b3428;
+  color: #f5ede3;
+  border-radius: 6px;
+  width: 220px;
+}
+
+button {
+  padding: 12px 18px;
+  margin: 8px;
+  background: #6d1414;
+  border: 1px solid #a44;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #8c1b1b;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#room,
+#game {
+  margin-top: 30px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #3b2b22;
+  border-radius: 12px;
+}
+
+#playerList,
+#alivePlayerList {
+  list-style: none;
+  padding: 0;
+  margin: 20px auto;
+  max-width: 420px;
+}
+
+#playerList li,
+#alivePlayerList li {
+  background: rgba(255, 255, 255, 0.04);
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #33241d;
+}
+
+.host-badge {
+  color: #ffcc88;
+  font-weight: bold;
+}
+
+.dead-text {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+#roomStatus,
+#phaseText,
+#actionText,
+#publicMessageText {
+  color: #caa27f;
+  font-style: italic;
+}
+
+.role-card {
+  margin: 20px auto;
+  max-width: 420px;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #4b3428;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.role-murderer {
+  border-color: #8b0000;
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.25);
+}
+
+.role-villager {
+  border-color: #7aa6d8;
+  box-shadow: 0 0 20px rgba(122, 166, 216, 0.2);
+}
+
+.panel {
+  margin-top: 20px;
+}
+
+.player-action-button {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 10px auto;
+}
+
+.ready-text {
+  color: #9ed39e;
+  font-weight: bold;
+}
+
+.win-text {
+  color: #ffcc88;
+  font-weight: bold;
+  font-size: 20px;
+}
+
 #settingsContent {
   max-width: 520px;
   margin: 0 auto;
