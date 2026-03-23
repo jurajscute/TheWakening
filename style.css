@@ -1,87 +1,192 @@
+:root {
+  --bg-1: #090707;
+  --bg-2: #140d0d;
+  --bg-3: #1c1411;
+  --panel: rgba(255, 255, 255, 0.04);
+  --panel-strong: rgba(255, 255, 255, 0.06);
+  --border: #3a2921;
+  --border-strong: #5a3a2b;
+  --text: #f3eadf;
+  --muted: #c9aa87;
+  --gold: #ffcc88;
+  --red: #8b1e1e;
+  --red-bright: #b52b2b;
+  --blue: #7aa6d8;
+  --green: #91c79a;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: Georgia, serif;
-  background: linear-gradient(to bottom, #090707, #16100d);
-  color: #f0e6d2;
-  text-align: center;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top, rgba(139, 30, 30, 0.12), transparent 30%),
+    linear-gradient(to bottom, var(--bg-1), var(--bg-2) 45%, var(--bg-3));
   min-height: 100vh;
+  text-align: center;
 }
 
 #app {
-  padding: 40px 20px;
-  max-width: 760px;
+  width: min(1100px, 94vw);
   margin: 0 auto;
+  padding: 36px 18px 60px;
 }
 
 h1 {
-  color: #8b1e1e;
-  font-size: 52px;
-  margin-bottom: 10px;
-  letter-spacing: 2px;
+  margin: 8px 0 10px;
+  font-size: clamp(42px, 6vw, 72px);
+  color: var(--gold);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(255, 204, 136, 0.08);
 }
 
-h2, h3 {
-  color: #d3b08c;
+h2 {
+  margin: 8px 0 12px;
+  color: var(--gold);
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+h3 {
+  margin-top: 0;
+  color: var(--gold);
+  font-size: 20px;
+}
+
+p {
+  line-height: 1.5;
+}
+
+input,
+button {
+  font: inherit;
 }
 
 input {
-  padding: 12px;
+  width: min(260px, 90vw);
+  padding: 12px 14px;
   margin: 8px;
-  background: #1a1512;
-  border: 1px solid #4b3428;
-  color: #f5ede3;
-  border-radius: 6px;
-  width: 220px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+input:focus {
+  border-color: var(--gold);
+  transform: translateY(-1px);
 }
 
 button {
   padding: 12px 18px;
   margin: 8px;
-  background: #6d1414;
   border: 1px solid #a44;
+  border-radius: 10px;
+  background: linear-gradient(to bottom, #7d1717, #5f1010);
   color: white;
-  border-radius: 6px;
   cursor: pointer;
   font-weight: bold;
+  letter-spacing: 0.3px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
 }
 
 button:hover {
-  background: #8c1b1b;
+  transform: translateY(-2px);
+  background: linear-gradient(to bottom, #982020, #6b1414);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
 }
 
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+#menu,
+#room,
+#game {
+  animation: fadeUp 0.28s ease;
 }
 
 #room,
 #game {
-  margin-top: 30px;
+  margin-top: 28px;
+  padding: 28px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(4px);
+}
+
+#roomStatus,
+#phaseText,
+#actionText,
+#publicMessageText,
+.setting-note {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.panel {
+  margin-top: 22px;
+  padding: 22px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.025);
+}
+
+.role-card {
+  margin: 22px auto 0;
+  max-width: 560px;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid #3b2b22;
-  border-radius: 12px;
+  border-radius: 18px;
+  border: 2px solid var(--border-strong);
+  background: linear-gradient(to bottom, rgba(0,0,0,0.28), rgba(255,255,255,0.02));
+  box-shadow: var(--shadow);
+}
+
+.role-murderer {
+  border-color: #8b0000;
+  box-shadow: 0 0 30px rgba(139, 0, 0, 0.18);
+}
+
+.role-villager {
+  border-color: #6e5a48;
+  box-shadow: 0 0 24px rgba(255, 204, 136, 0.08);
 }
 
 #playerList,
-#alivePlayerList {
+#alivePlayerList,
+#finalRoleList {
   list-style: none;
   padding: 0;
-  margin: 20px auto;
-  max-width: 420px;
+  margin: 18px auto 0;
+  max-width: 520px;
 }
 
 #playerList li,
-#alivePlayerList li {
-  background: rgba(255, 255, 255, 0.04);
-  margin: 8px 0;
-  padding: 12px;
-  border-radius: 8px;
+#alivePlayerList li,
+#finalRoleList li {
+  margin: 10px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
   border: 1px solid #33241d;
+  background: var(--panel-strong);
 }
 
 .host-badge {
-  color: #ffcc88;
+  color: var(--gold);
   font-weight: bold;
 }
 
@@ -90,57 +195,25 @@ button:disabled {
   text-decoration: line-through;
 }
 
-#roomStatus,
-#phaseText,
-#actionText,
-#publicMessageText {
-  color: #caa27f;
-  font-style: italic;
-}
-
-.role-card {
-  margin: 20px auto;
-  max-width: 420px;
-  padding: 20px;
-  border-radius: 12px;
-  border: 2px solid #4b3428;
-  background: rgba(0, 0, 0, 0.25);
-}
-
-.role-murderer {
-  border-color: #8b0000;
-  box-shadow: 0 0 20px rgba(139, 0, 0, 0.25);
-}
-
-.role-villager {
-  border-color: #7aa6d8;
-  box-shadow: 0 0 20px rgba(122, 166, 216, 0.2);
-}
-
-.panel {
-  margin-top: 20px;
-}
-
 .player-action-button {
   display: block;
-  width: 100%;
-  max-width: 320px;
+  width: min(360px, 90%);
   margin: 10px auto;
 }
 
 .ready-text {
-  color: #9ed39e;
+  color: var(--green);
   font-weight: bold;
 }
 
 .win-text {
-  color: #ffcc88;
+  color: var(--gold);
   font-weight: bold;
   font-size: 20px;
 }
 
 #settingsContent {
-  max-width: 520px;
+  max-width: 680px;
   margin: 0 auto;
   text-align: left;
 }
@@ -148,18 +221,18 @@ button:disabled {
 .role-setting-row {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr 1fr;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   margin: 12px 0;
-  padding: 12px;
+  padding: 14px;
   border: 1px solid #33241d;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .role-setting-title {
   font-weight: bold;
-  color: #f0e6d2;
+  color: var(--text);
 }
 
 .role-setting-controls {
@@ -168,17 +241,11 @@ button:disabled {
 
 .role-setting-row label {
   font-size: 14px;
-  color: #caa27f;
+  color: var(--muted);
 }
 
 .role-setting-row input[type="number"] {
   width: 90px;
-}
-
-.setting-note {
-  color: #caa27f;
-  font-style: italic;
-  margin-top: 10px;
 }
 
 #winScreen {
@@ -194,41 +261,35 @@ button:disabled {
 }
 
 #winScreenContent {
-  width: min(700px, 92vw);
-  padding: 32px;
+  width: min(780px, 94vw);
+  padding: 34px 28px;
   border: 2px solid #6d1414;
-  border-radius: 16px;
-  background: linear-gradient(to bottom, #160d0d, #241313);
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.45);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top, rgba(255,204,136,0.08), transparent 35%),
+    linear-gradient(to bottom, #160d0d, #241313);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
 #winTitle {
-  color: #ffcc88;
+  color: var(--gold);
   margin-bottom: 8px;
+  font-size: clamp(30px, 4vw, 48px);
 }
 
 #winSubtitle,
 #winYourRole,
 #winExtra {
-  color: #f0e6d2;
+  color: var(--text);
 }
 
-.win-screen-show {
-  display: block !important;
-}
-
-#finalRoleList {
-  list-style: none;
-  padding: 0;
-  margin: 16px auto 0;
-  max-width: 420px;
-}
-
-#finalRoleList li {
-  background: rgba(255, 255, 255, 0.05);
-  margin: 8px 0;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #33241d;
-  color: #f0e6d2;
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
