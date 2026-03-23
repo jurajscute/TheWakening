@@ -108,58 +108,67 @@ function resetLocalState() {
 }
 
 async function roomExists(roomCode) {
-  const roomRef = doc(db, "rooms", roomCode);
-  const roomSnap = await getDoc(roomRef);
-  return roomSnap.exists();
+  try {
+    const roomRef = doc(db, "rooms", roomCode);
+    const roomSnap = await getDoc(roomRef);
+    return roomSnap.exists();
+  } catch (error) {
+    console.error("roomExists error:", error);
+    throw error;
+  }
 }
-
 // =====================================
 // 6. CREATE ROOM
 // =====================================
 async function createRoom() {
-  const name = nameInput.value.trim();
+  try {
+    const name = nameInput.value.trim();
 
-  if (!name) {
-    alert("Please enter your name.");
-    return;
+    if (!name) {
+      alert("Please enter your name.");
+      return;
+    }
+
+    let roomCode = generateRoomCode();
+    while (await roomExists(roomCode)) {
+      roomCode = generateRoomCode();
+    }
+
+    const playerId = generatePlayerId();
+
+    const roomRef = doc(db, "rooms", roomCode);
+    const playerRef = doc(db, "rooms", roomCode, "players", playerId);
+
+    await setDoc(roomRef, {
+      roomCode,
+      hostId: playerId,
+      status: "lobby",
+      createdAt: serverTimestamp(),
+      maxPlayers: 20,
+      phase: "lobby"
+    });
+
+    await setDoc(playerRef, {
+      id: playerId,
+      name,
+      isHost: true,
+      isAlive: true,
+      joinedAt: serverTimestamp(),
+      role: null,
+      team: null
+    });
+
+    currentRoomCode = roomCode;
+    currentPlayerId = playerId;
+    currentPlayerName = name;
+
+    showRoomUI(roomCode);
+    subscribeToRoom(roomCode);
+    subscribeToPlayers(roomCode);
+  } catch (error) {
+    console.error("Create room failed:", error);
+    alert("Create room failed. Check console for details.");
   }
-
-  let roomCode = generateRoomCode();
-  while (await roomExists(roomCode)) {
-    roomCode = generateRoomCode();
-  }
-
-  const playerId = generatePlayerId();
-
-  const roomRef = doc(db, "rooms", roomCode);
-  const playerRef = doc(db, "rooms", roomCode, "players", playerId);
-
-  await setDoc(roomRef, {
-    roomCode,
-    hostId: playerId,
-    status: "lobby",
-    createdAt: serverTimestamp(),
-    maxPlayers: 20,
-    phase: "lobby"
-  });
-
-  await setDoc(playerRef, {
-    id: playerId,
-    name,
-    isHost: true,
-    isAlive: true,
-    joinedAt: serverTimestamp(),
-    role: null,
-    team: null
-  });
-
-  currentRoomCode = roomCode;
-  currentPlayerId = playerId;
-  currentPlayerName = name;
-
-  showRoomUI(roomCode);
-  subscribeToRoom(roomCode);
-  subscribeToPlayers(roomCode);
 }
 
 // =====================================
