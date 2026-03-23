@@ -293,3 +293,99 @@ button:disabled {
     transform: translateY(0);
   }
 }
+
+.phase-banner {
+  margin: 4px auto 22px;
+  padding: 22px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.28s ease;
+}
+
+.phase-banner-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.phase-banner-title {
+  font-size: clamp(24px, 3.5vw, 38px);
+  font-weight: bold;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.phase-banner-text {
+  color: var(--text);
+  opacity: 0.92;
+}
+
+.phase-role-reveal {
+  border-color: #8d6d45;
+  box-shadow: 0 0 24px rgba(255, 204, 136, 0.12);
+}
+
+.phase-night-action {
+  border-color: #5b1b1b;
+  box-shadow: 0 0 28px rgba(139, 30, 30, 0.16);
+}
+
+.phase-night-result {
+  border-color: #4e2d63;
+  box-shadow: 0 0 28px rgba(110, 70, 150, 0.15);
+}
+
+.phase-morning {
+  border-color: #6e5a48;
+  box-shadow: 0 0 28px rgba(255, 204, 136, 0.08);
+}
+
+.phase-voting {
+  border-color: #7a4a1c;
+  box-shadow: 0 0 28px rgba(201, 140, 70, 0.12);
+}
+
+.phase-vote-result {
+  border-color: #6a2e2e;
+  box-shadow: 0 0 28px rgba(170, 80, 80, 0.12);
+}
+
+.phase-game-over {
+  border-color: #7d1717;
+  box-shadow: 0 0 34px rgba(139, 30, 30, 0.2);
+}
+
+#game.phase-role-reveal .role-card {
+  border-color: #8d6d45;
+}
+
+#game.phase-night-action .role-card {
+  border-color: #5b1b1b;
+}
+
+#game.phase-night-result .role-card {
+  border-color: #4e2d63;
+}
+
+#game.phase-morning .role-card {
+  border-color: #6e5a48;
+}
+
+#game.phase-voting .role-card {
+  border-color: #7a4a1c;
+}
+
+#game.phase-vote-result .role-card {
+  border-color: #6a2e2e;
+}
+
+#phaseText {
+  font-size: 13px;
+  opacity: 0.8;
+  margin-top: -4px;
+  margin-bottom: 10px;
+}

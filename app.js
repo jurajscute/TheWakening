@@ -44,6 +44,11 @@ const menu = document.getElementById("menu");
 const roomScreen = document.getElementById("room");
 const gameScreen = document.getElementById("game");
 
+const phaseBanner = document.getElementById("phaseBanner");
+const phaseBannerEyebrow = document.getElementById("phaseBannerEyebrow");
+const phaseBannerTitle = document.getElementById("phaseBannerTitle");
+const phaseBannerText = document.getElementById("phaseBannerText");
+
 const roomCodeText = document.getElementById("roomCode");
 const gameRoomCode = document.getElementById("gameRoomCode");
 const roomStatus = document.getElementById("roomStatus");
@@ -196,6 +201,21 @@ function showMenuUI() {
   settingsContent.innerHTML = "";
   startBtn.style.display = "none";
   restartBtn.style.display = "none";
+  phaseBanner.className = "phase-banner";
+  phaseBannerEyebrow.textContent = "Phase";
+  phaseBannerTitle.textContent = "The Game Begins";
+  phaseBannerText.textContent = "Prepare yourself.";
+
+gameScreen.classList.remove(
+  "phase-role-reveal",
+  "phase-night-action",
+  "phase-night-result",
+  "phase-morning",
+  "phase-voting",
+  "phase-vote-result",
+  "phase-game-over"
+);
+
 }
 
 function cleanupListeners() {
@@ -553,6 +573,86 @@ async function maybeAdvanceAfterRoleReveal() {
     console.error("Advance after role reveal failed:", error);
     alert("Advance after role reveal failed: " + error.message);
   }
+}
+
+function setPhaseAppearance(phase) {
+  gameScreen.classList.remove(
+    "phase-role-reveal",
+    "phase-night-action",
+    "phase-night-result",
+    "phase-morning",
+    "phase-voting",
+    "phase-vote-result",
+    "phase-game-over"
+  );
+
+  if (phase === "role_reveal") {
+    gameScreen.classList.add("phase-role-reveal");
+    phaseBanner.className = "phase-banner phase-role-reveal";
+    phaseBannerEyebrow.textContent = "Opening";
+    phaseBannerTitle.textContent = "Role Reveal";
+    phaseBannerText.textContent = "Study your fate before the first night begins.";
+    return;
+  }
+
+  if (phase === "night_action") {
+    gameScreen.classList.add("phase-night-action");
+    phaseBanner.className = "phase-banner phase-night-action";
+    phaseBannerEyebrow.textContent = "Night";
+    phaseBannerTitle.textContent = "Night Action";
+    phaseBannerText.textContent = "Darkness stirs. Make your move in secret.";
+    return;
+  }
+
+  if (phase === "night_result") {
+    gameScreen.classList.add("phase-night-result");
+    phaseBanner.className = "phase-banner phase-night-result";
+    phaseBannerEyebrow.textContent = "Night";
+    phaseBannerTitle.textContent = "Night Results";
+    phaseBannerText.textContent = "The shadows whisper what became of the night.";
+    return;
+  }
+
+  if (phase === "morning") {
+    gameScreen.classList.add("phase-morning");
+    phaseBanner.className = "phase-banner phase-morning";
+    phaseBannerEyebrow.textContent = "Dawn";
+    phaseBannerTitle.textContent = "Morning";
+    phaseBannerText.textContent = "The village wakes to the consequences.";
+    return;
+  }
+
+  if (phase === "voting") {
+    gameScreen.classList.add("phase-voting");
+    phaseBanner.className = "phase-banner phase-voting";
+    phaseBannerEyebrow.textContent = "Judgment";
+    phaseBannerTitle.textContent = "Voting";
+    phaseBannerText.textContent = "Choose who will face the town’s wrath.";
+    return;
+  }
+
+  if (phase === "vote_result") {
+    gameScreen.classList.add("phase-vote-result");
+    phaseBanner.className = "phase-banner phase-vote-result";
+    phaseBannerEyebrow.textContent = "Judgment";
+    phaseBannerTitle.textContent = "Vote Result";
+    phaseBannerText.textContent = "The verdict has been decided.";
+    return;
+  }
+
+  if (phase === "game_over") {
+    gameScreen.classList.add("phase-game-over");
+    phaseBanner.className = "phase-banner phase-game-over";
+    phaseBannerEyebrow.textContent = "Finale";
+    phaseBannerTitle.textContent = "Game Over";
+    phaseBannerText.textContent = "The village's tale has come to an end.";
+    return;
+  }
+
+  phaseBanner.className = "phase-banner";
+  phaseBannerEyebrow.textContent = "Phase";
+  phaseBannerTitle.textContent = "The Wakening";
+  phaseBannerText.textContent = "The story continues.";
 }
 
 function renderActionPanel() {
@@ -929,6 +1029,7 @@ function subscribeToRoom(roomCode) {
       renderSettingsPanel();
     } else {
       showGameUI(roomCode);
+      setPhaseAppearance(currentRoomData.phase);
 
       if (currentRoomData.phase === "role_reveal") {
         phaseText.textContent = "Role Reveal";
