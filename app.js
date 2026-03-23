@@ -616,7 +616,7 @@ async function startGame() {
         readyForPhase: false,
         nightActionTargetId: null,
         voteTargetId: null,
-        privateMessage: ""
+        privateMessage: "",
         isAlive: true
       });
     });
