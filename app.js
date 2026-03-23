@@ -66,6 +66,12 @@ const settingsContent = document.getElementById("settingsContent");
 const nameInput = document.getElementById("nameInput");
 const roomInput = document.getElementById("roomInput");
 
+const winScreen = document.getElementById("winScreen");
+const winTitle = document.getElementById("winTitle");
+const winSubtitle = document.getElementById("winSubtitle");
+const winYourRole = document.getElementById("winYourRole");
+const winExtra = document.getElementById("winExtra");
+
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
 const startBtn = document.getElementById("startBtn");
@@ -76,7 +82,8 @@ function getDefaultRoleSettings() {
   return {
     murderer: { enabled: true, max: 1, weight: 100 },
     doctor: { enabled: true, max: 1, weight: 100 },
-    watchman: { enabled: true, max: 1, weight: 100 }
+    watchman: { enabled: true, max: 1, weight: 100 },
+    executioner: { enabled: true, max: 1, weight: 50 }
   };
 }
 
@@ -130,6 +137,15 @@ function getRoleInfo(role) {
     };
   }
 
+  if (role === "executioner") {
+    return {
+      name: "Executioner",
+      team: "Neutral",
+      description: "You win if your assigned target is voted out.",
+      className: "role-villager"
+    };
+  }
+
   return {
     name: "Villager",
     team: "Village Team",
@@ -154,6 +170,7 @@ function showGameUI(roomCode) {
 
 function showMenuUI() {
   menu.style.display = "block";
+  winScreen.style.display = "none";
   roomScreen.style.display = "none";
   gameScreen.style.display = "none";
   roomCodeText.textContent = "";
@@ -261,10 +278,11 @@ function renderSettingsPanel() {
   settingsContent.innerHTML = "";
 
   const roleLabels = {
-    murderer: "Murderer",
-    doctor: "Doctor",
-    watchman: "Watchman"
-  };
+  murderer: "Murderer",
+  doctor: "Doctor",
+  watchman: "Watchman",
+  executioner: "Executioner"
+};
 
   Object.keys(roleLabels).forEach((roleKey) => {
     const roleSettings = settings[roleKey] || { enabled: false, max: 0 };
@@ -407,13 +425,14 @@ function buildRoleAssignments(players, settings) {
 
   const roleCounts = {
     doctor: 0,
-    watchman: 0
+    watchman: 0,
+    executioner: 0
   };
 
   while (remainingPlayers.length > 0) {
     const rolePool = [];
 
-    ["doctor", "watchman"].forEach((roleKey) => {
+    ["doctor", "watchman", "executioner"].forEach((roleKey) => {
       const roleSettings = settings[roleKey];
       if (!roleSettings) return;
       if (!roleSettings.enabled) return;
@@ -426,7 +445,6 @@ function buildRoleAssignments(players, settings) {
     });
 
     const chosenRole = pickWeightedRole(rolePool);
-
     const player = remainingPlayers.shift();
 
     if (!chosenRole) {
@@ -443,7 +461,7 @@ function buildRoleAssignments(players, settings) {
     assignments.push({
       id: player.id,
       role: chosenRole,
-      team: "village"
+      team: chosenRole === "executioner" ? "neutral" : "village"
     });
   }
 
@@ -706,7 +724,8 @@ async function createRoom() {
       protectTargetId: null,
       investigateTargetId: null,
       voteTargetId: null,
-      privateMessage: ""
+      privateMessage: "",
+      executionerTargetId: null,
     });
 
     currentRoomCode = roomCode;
@@ -769,7 +788,8 @@ async function joinRoom() {
       protectTargetId: null,
       investigateTargetId: null,
       voteTargetId: null,
-      privateMessage: ""
+      privateMessage: "",
+      executionerTargetId: null,
     });
 
     currentRoomCode = roomCode;
@@ -801,6 +821,7 @@ function subscribeToRoom(roomCode) {
       showRoomUI(roomCode);
       roomStatus.textContent = `Status: ${currentRoomData.status}`;
       startBtn.style.display = currentRoomData.hostId === currentPlayerId ? "inline-block" : "none";
+      winScreen.style.display = "none";
       restartBtn.style.display = "none";
       renderSettingsPanel();
     } else {
@@ -824,6 +845,7 @@ function subscribeToRoom(roomCode) {
 
       renderPublicMessage();
       renderActionPanel();
+      renderWinScreen();
 
       const me = getMe();
       if (currentRoomData.phase === "game_over" && me && me.isHost) {
@@ -867,10 +889,32 @@ function subscribeToPlayers(roomCode) {
     }
 
     renderActionPanel();
+    renderWinScreen();
     if (currentRoomData?.status === "lobby") {
       renderSettingsPanel();
     }
   });
+}
+
+function assignExecutionerTargets(players, roleAssignments) {
+  const villageAlignedTargets = roleAssignments
+    .filter((a) => a.team === "village" && a.role === "villager")
+    .map((a) => a.id);
+
+  const executioners = roleAssignments.filter((a) => a.role === "executioner");
+
+  const targetMap = {};
+
+  executioners.forEach((executioner, index) => {
+    if (villageAlignedTargets.length === 0) {
+      targetMap[executioner.id] = null;
+      return;
+    }
+
+    targetMap[executioner.id] = villageAlignedTargets[index % villageAlignedTargets.length];
+  });
+
+  return targetMap;
 }
 
 async function startGame() {
@@ -894,6 +938,7 @@ async function startGame() {
     const players = playersSnap.docs.map((docSnap) => docSnap.data());
     const settings = roomData.settings?.roles || getDefaultRoleSettings();
     const roleAssignments = buildRoleAssignments(players, settings);
+    const executionerTargets = assignExecutionerTargets(players, roleAssignments);
 
     const batch = writeBatch(db);
 
@@ -907,6 +952,7 @@ async function startGame() {
         investigateTargetId: null,
         voteTargetId: null,
         privateMessage: "",
+        executionerTargetId: executionerTargets[assignment.id] ?? null,
         isAlive: true
       });
     });
@@ -915,7 +961,9 @@ async function startGame() {
       status: "in_progress",
       phase: "night_action",
       dayNumber: 1,
-      publicMessage: "The first night begins."
+      publicMessage: "The first night begins.",
+      winner: null,
+      winnerText: ""
     });
 
     await batch.commit();
@@ -943,25 +991,28 @@ async function restartGame() {
     const batch = writeBatch(db);
 
     players.forEach((player) => {
-      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-        role: null,
-        team: null,
-        isAlive: true,
-        readyForPhase: false,
-        nightActionTargetId: null,
-        protectTargetId: null,
-        investigateTargetId: null,
-        voteTargetId: null,
-        privateMessage: ""
-      });
-    });
+  batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+    role: null,
+    team: null,
+    isAlive: true,
+    readyForPhase: false,
+    nightActionTargetId: null,
+    protectTargetId: null,
+    investigateTargetId: null,
+    voteTargetId: null,
+    privateMessage: "",
+    executionerTargetId: null
+  });
+});
 
     batch.update(roomRef, {
-      status: "lobby",
-      phase: "lobby",
-      dayNumber: 0,
-      publicMessage: "The room is waiting for players."
-    });
+  status: "lobby",
+  phase: "lobby",
+  dayNumber: 0,
+  publicMessage: "The room is waiting for players.",
+  winner: null,
+  winnerText: ""
+});
 
     await batch.commit();
   } catch (error) {
@@ -1112,6 +1163,13 @@ async function maybeResolveNight() {
             message = `${target.name} is a ${target.role}.`;
           }
         }
+      } else if (player.role === "executioner") {
+  const target = players.find((p) => p.id === player.executionerTargetId);
+  if (target) {
+    message = `Your target is ${target.name}. Get them voted out.`;
+  } else {
+    message = "You do not have a valid target.";
+  }
       } else {
         message = "You survived the night.";
       }
@@ -1170,9 +1228,11 @@ async function maybeAdvanceAfterMorning() {
 
     if (winner) {
       await updateDoc(roomRef, {
-        phase: "game_over",
-        publicMessage: winner === "village" ? "Village wins!" : "Murderers win!"
-      });
+  phase: "game_over",
+  publicMessage: winner === "village" ? "Village wins!" : "Murderers win!",
+  winner,
+  winnerText: winner === "village" ? "Village wins!" : "Murderers win!"
+});
       return;
     }
 
@@ -1264,6 +1324,7 @@ async function maybeResolveVoting() {
     }
 
     let publicMessage = "The vote ended in a tie. No one was eliminated.";
+    let eliminatedPlayerId = null;
     const batch = writeBatch(db);
 
     if (!tie) {
@@ -1272,13 +1333,38 @@ async function maybeResolveVoting() {
       } else {
         const eliminatedPlayer = players.find((player) => player.id === topKey);
         if (eliminatedPlayer && eliminatedPlayer.isAlive) {
+          eliminatedPlayerId = eliminatedPlayer.id;
+
           batch.update(doc(db, "rooms", currentRoomCode, "players", eliminatedPlayer.id), {
             isAlive: false,
             readyForPhase: false
           });
+
           publicMessage = `${eliminatedPlayer.name} was voted out.`;
         }
       }
+    }
+
+    const executionerWinners = getExecutionerWinners(players, eliminatedPlayerId, "vote");
+
+    if (executionerWinners.length > 0) {
+      const winnerNames = executionerWinners.map((p) => p.name).join(", ");
+
+      players.forEach((player) => {
+        batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+          readyForPhase: false
+        });
+      });
+
+      batch.update(roomRef, {
+        phase: "game_over",
+        publicMessage,
+        winner: "executioner",
+        winnerText: `${winnerNames} won as Executioner!`
+      });
+
+      await batch.commit();
+      return;
     }
 
     alivePlayers.forEach((player) => {
@@ -1337,9 +1423,11 @@ async function maybeAdvanceAfterVoteResult() {
 
     if (winner) {
       await updateDoc(roomRef, {
-        phase: "game_over",
-        publicMessage: winner === "village" ? "Village wins!" : "Murderers win!"
-      });
+  phase: "game_over",
+  publicMessage: winner === "village" ? "Village wins!" : "Murderers win!",
+  winner,
+  winnerText: winner === "village" ? "Village wins!" : "Murderers win!"
+});
       return;
     }
 
@@ -1371,6 +1459,30 @@ async function maybeAdvanceAfterVoteResult() {
   } catch (error) {
     console.error("Advance after vote result failed:", error);
     alert("Advance after vote result failed: " + error.message);
+  }
+}
+
+function renderWinScreen() {
+  if (!currentRoomData || currentRoomData.phase !== "game_over") {
+    winScreen.style.display = "none";
+    return;
+  }
+
+  const me = getMe();
+  const myRoleInfo = me && me.role ? getRoleInfo(me.role) : null;
+
+  winScreen.style.display = "block";
+  winTitle.textContent = currentRoomData.winnerText || "Game Over";
+  winSubtitle.textContent = currentRoomData.publicMessage || "";
+  winYourRole.textContent = myRoleInfo ? `Your role: ${myRoleInfo.name}` : "";
+
+  if (me && me.role === "executioner") {
+    const target = currentPlayers.find((p) => p.id === me.executionerTargetId);
+    winExtra.textContent = target
+      ? `Your assigned target was: ${target.name}`
+      : "You did not have a valid target.";
+  } else {
+    winExtra.textContent = "";
   }
 }
 

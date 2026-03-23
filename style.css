@@ -180,3 +180,23 @@ button:disabled {
   font-style: italic;
   margin-top: 10px;
 }
+
+#winScreen {
+  border: 2px solid #6d1414;
+  background: rgba(109, 20, 20, 0.12);
+}
+
+#winTitle {
+  color: #ffcc88;
+  margin-bottom: 8px;
+}
+
+#winSubtitle,
+#winYourRole,
+#winExtra {
+  color: #f0e6d2;
+}
+
+.win-screen-show {
+  display: block !important;
+}
