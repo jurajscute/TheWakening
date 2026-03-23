@@ -9,7 +9,7 @@ body {
 
 #app {
   padding: 40px 20px;
-  max-width: 700px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
@@ -49,7 +49,8 @@ button:hover {
   background: #8c1b1b;
 }
 
-#room {
+#room,
+#game {
   margin-top: 30px;
   padding: 24px;
   background: rgba(255, 255, 255, 0.03);
@@ -57,14 +58,16 @@ button:hover {
   border-radius: 12px;
 }
 
-#playerList {
+#playerList,
+#alivePlayerList {
   list-style: none;
   padding: 0;
   margin: 20px auto;
   max-width: 420px;
 }
 
-#playerList li {
+#playerList li,
+#alivePlayerList li {
   background: rgba(255, 255, 255, 0.04);
   margin: 8px 0;
   padding: 12px;
@@ -81,7 +84,31 @@ button:hover {
   opacity: 0.6;
 }
 
-#roomStatus {
+#roomStatus,
+#phaseText {
   color: #caa27f;
   font-style: italic;
+}
+
+.role-card {
+  margin: 20px auto;
+  max-width: 420px;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #4b3428;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.role-murderer {
+  border-color: #8b0000;
+  box-shadow: 0 0 20px rgba(139, 0, 0, 0.25);
+}
+
+.role-villager {
+  border-color: #7aa6d8;
+  box-shadow: 0 0 20px rgba(122, 166, 216, 0.2);
+}
+
+.panel {
+  margin-top: 20px;
 }
