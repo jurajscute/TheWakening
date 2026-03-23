@@ -1,4 +1,3 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   initializeFirestore,
@@ -58,7 +57,6 @@ const roleTeam = document.getElementById("roleTeam");
 const roleDescription = document.getElementById("roleDescription");
 
 const publicMessageText = document.getElementById("publicMessageText");
-
 const actionText = document.getElementById("actionText");
 const actionControls = document.getElementById("actionControls");
 
@@ -178,13 +176,9 @@ function getAliveOtherPlayers() {
   );
 }
 
-function countAliveByTeam(team) {
-  return currentPlayers.filter((player) => player.isAlive && player.team === team).length;
-}
-
-function getWinner() {
-  const aliveMurderers = countAliveByTeam("murderer");
-  const aliveVillagers = countAliveByTeam("village");
+function getWinnerFromPlayers(players) {
+  const aliveMurderers = players.filter((p) => p.isAlive && p.team === "murderer").length;
+  const aliveVillagers = players.filter((p) => p.isAlive && p.team === "village").length;
 
   if (aliveMurderers === 0) {
     return "village";
@@ -245,7 +239,6 @@ function renderActionPanel() {
 
     if (me.role === "murderer") {
       actionText.textContent = "Choose a player to kill tonight.";
-
       const targets = getAliveOtherPlayers();
 
       targets.forEach((target) => {
@@ -280,6 +273,48 @@ function renderActionPanel() {
     btn.textContent = "Continue";
     btn.className = "player-action-button";
     btn.addEventListener("click", continueMorning);
+    actionControls.appendChild(btn);
+    return;
+  }
+
+  if (currentRoomData.phase === "voting") {
+    if (me.readyForPhase) {
+      actionText.innerHTML = '<span class="ready-text">You voted. Waiting for other players...</span>';
+      return;
+    }
+
+    actionText.textContent = "Choose a player to vote out, or skip.";
+
+    const targets = getAliveOtherPlayers();
+
+    targets.forEach((target) => {
+      const btn = document.createElement("button");
+      btn.textContent = `Vote: ${target.name}`;
+      btn.className = "player-action-button";
+      btn.addEventListener("click", () => submitVote(target.id));
+      actionControls.appendChild(btn);
+    });
+
+    const skipBtn = document.createElement("button");
+    skipBtn.textContent = "Skip Vote";
+    skipBtn.className = "player-action-button";
+    skipBtn.addEventListener("click", () => submitVote("skip"));
+    actionControls.appendChild(skipBtn);
+    return;
+  }
+
+  if (currentRoomData.phase === "vote_result") {
+    if (me.readyForPhase) {
+      actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
+      return;
+    }
+
+    actionText.textContent = "Read the voting result, then continue.";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Continue";
+    btn.className = "player-action-button";
+    btn.addEventListener("click", continueVoteResult);
     actionControls.appendChild(btn);
     return;
   }
@@ -323,7 +358,8 @@ async function createRoom() {
       role: null,
       team: null,
       readyForPhase: false,
-      nightActionTargetId: null
+      nightActionTargetId: null,
+      voteTargetId: null
     });
 
     currentRoomCode = roomCode;
@@ -382,7 +418,8 @@ async function joinRoom() {
       role: null,
       team: null,
       readyForPhase: false,
-      nightActionTargetId: null
+      nightActionTargetId: null,
+      voteTargetId: null
     });
 
     currentRoomCode = roomCode;
@@ -420,6 +457,10 @@ function subscribeToRoom(roomCode) {
         phaseText.textContent = `Night ${currentRoomData.dayNumber} — Night Action`;
       } else if (currentRoomData.phase === "morning") {
         phaseText.textContent = `Day ${currentRoomData.dayNumber} — Morning`;
+      } else if (currentRoomData.phase === "voting") {
+        phaseText.textContent = `Day ${currentRoomData.dayNumber} — Voting`;
+      } else if (currentRoomData.phase === "vote_result") {
+        phaseText.textContent = `Day ${currentRoomData.dayNumber} — Vote Result`;
       } else if (currentRoomData.phase === "game_over") {
         phaseText.textContent = "Game Over";
       } else {
@@ -497,6 +538,7 @@ async function startGame() {
         team: player.id === murdererId ? "murderer" : "village",
         readyForPhase: false,
         nightActionTargetId: null,
+        voteTargetId: null,
         isAlive: true
       });
     });
@@ -572,20 +614,9 @@ async function maybeResolveNight() {
 
     const murderer = alivePlayers.find((player) => player.role === "murderer");
     const targetId = murderer ? murderer.nightActionTargetId : null;
-    const winnerNow = getWinnerFromPlayers(players);
-
-    const batch = writeBatch(db);
-
-    if (winnerNow) {
-      batch.update(roomRef, {
-        phase: "game_over",
-        publicMessage: winnerNow === "village" ? "Village wins!" : "Murderers win!"
-      });
-      await batch.commit();
-      return;
-    }
 
     let publicMessage = "No one died tonight.";
+    const batch = writeBatch(db);
 
     if (targetId) {
       const target = players.find((player) => player.id === targetId);
@@ -616,21 +647,6 @@ async function maybeResolveNight() {
     console.error("Night resolve failed:", error);
     alert("Night resolve failed: " + error.message);
   }
-}
-
-function getWinnerFromPlayers(players) {
-  const aliveMurderers = players.filter((p) => p.isAlive && p.team === "murderer").length;
-  const aliveVillagers = players.filter((p) => p.isAlive && p.team === "village").length;
-
-  if (aliveMurderers === 0) {
-    return "village";
-  }
-
-  if (aliveMurderers >= aliveVillagers) {
-    return "murderer";
-  }
-
-  return null;
 }
 
 async function continueMorning() {
@@ -685,7 +701,175 @@ async function maybeAdvanceAfterMorning() {
     alivePlayers.forEach((player) => {
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
         readyForPhase: false,
-        nightActionTargetId: null
+        voteTargetId: null
+      });
+    });
+
+    batch.update(roomRef, {
+      phase: "voting",
+      publicMessage: "Discuss and choose someone to eliminate."
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Advance after morning failed:", error);
+    alert("Advance after morning failed: " + error.message);
+  }
+}
+
+async function submitVote(targetId) {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
+      voteTargetId: targetId,
+      readyForPhase: true
+    });
+
+    await maybeResolveVoting();
+  } catch (error) {
+    console.error("Vote submit failed:", error);
+    alert("Vote submit failed: " + error.message);
+  }
+}
+
+async function maybeResolveVoting() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const playersRef = collection(db, "rooms", currentRoomCode, "players");
+
+    const [roomSnap, playersSnap] = await Promise.all([
+      getDoc(roomRef),
+      getDocs(playersRef)
+    ]);
+
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.phase !== "voting") return;
+
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+    const alivePlayers = players.filter((player) => player.isAlive);
+    const allReady = alivePlayers.every((player) => player.readyForPhase === true);
+
+    if (!allReady) return;
+
+    const voteCounts = {};
+
+    alivePlayers.forEach((player) => {
+      const vote = player.voteTargetId || "skip";
+      voteCounts[vote] = (voteCounts[vote] || 0) + 1;
+    });
+
+    let topKey = null;
+    let topCount = -1;
+    let tie = false;
+
+    for (const key in voteCounts) {
+      const count = voteCounts[key];
+
+      if (count > topCount) {
+        topKey = key;
+        topCount = count;
+        tie = false;
+      } else if (count === topCount) {
+        tie = true;
+      }
+    }
+
+    let publicMessage = "The vote ended in a tie. No one was eliminated.";
+    const batch = writeBatch(db);
+
+    if (!tie) {
+      if (topKey === "skip") {
+        publicMessage = "The town chose to skip the vote.";
+      } else {
+        const eliminatedPlayer = players.find((player) => player.id === topKey);
+        if (eliminatedPlayer && eliminatedPlayer.isAlive) {
+          batch.update(doc(db, "rooms", currentRoomCode, "players", eliminatedPlayer.id), {
+            isAlive: false,
+            readyForPhase: false
+          });
+          publicMessage = `${eliminatedPlayer.name} was voted out.`;
+        }
+      }
+    }
+
+    alivePlayers.forEach((player) => {
+      if (player.id !== topKey) {
+        batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+          readyForPhase: false
+        });
+      }
+    });
+
+    batch.update(roomRef, {
+      phase: "vote_result",
+      publicMessage
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Vote resolve failed:", error);
+    alert("Vote resolve failed: " + error.message);
+  }
+}
+
+async function continueVoteResult() {
+  try {
+    const me = getMe();
+    if (!me || !me.isAlive) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
+      readyForPhase: true
+    });
+
+    await maybeAdvanceAfterVoteResult();
+  } catch (error) {
+    console.error("Vote result continue failed:", error);
+    alert("Vote result continue failed: " + error.message);
+  }
+}
+
+async function maybeAdvanceAfterVoteResult() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const playersRef = collection(db, "rooms", currentRoomCode, "players");
+
+    const [roomSnap, playersSnap] = await Promise.all([
+      getDoc(roomRef),
+      getDocs(playersRef)
+    ]);
+
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.phase !== "vote_result") return;
+
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+    const winner = getWinnerFromPlayers(players);
+
+    if (winner) {
+      await updateDoc(roomRef, {
+        phase: "game_over",
+        publicMessage: winner === "village" ? "Village wins!" : "Murderers win!"
+      });
+      return;
+    }
+
+    const alivePlayers = players.filter((player) => player.isAlive);
+    const allReady = alivePlayers.every((player) => player.readyForPhase === true);
+
+    if (!allReady) return;
+
+    const batch = writeBatch(db);
+
+    alivePlayers.forEach((player) => {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+        readyForPhase: false,
+        nightActionTargetId: null,
+        voteTargetId: null
       });
     });
 
@@ -697,8 +881,8 @@ async function maybeAdvanceAfterMorning() {
 
     await batch.commit();
   } catch (error) {
-    console.error("Advance after morning failed:", error);
-    alert("Advance after morning failed: " + error.message);
+    console.error("Advance after vote result failed:", error);
+    alert("Advance after vote result failed: " + error.message);
   }
 }
 
