@@ -182,8 +182,24 @@ button:disabled {
 }
 
 #winScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 5, 5, 0.96);
+  padding: 24px;
+  text-align: center;
+}
+
+#winScreenContent {
+  width: min(700px, 92vw);
+  padding: 32px;
   border: 2px solid #6d1414;
-  background: rgba(109, 20, 20, 0.12);
+  border-radius: 16px;
+  background: linear-gradient(to bottom, #160d0d, #241313);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.45);
 }
 
 #winTitle {

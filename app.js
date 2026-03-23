@@ -254,9 +254,23 @@ function renderAlivePlayers(players) {
 
 function renderRole(role) {
   const info = getRoleInfo(role);
+  const me = getMe();
+
   roleName.textContent = info.name;
   roleTeam.textContent = info.team;
-  roleDescription.textContent = info.description;
+
+  let description = info.description;
+
+  if (me && me.role === "executioner") {
+    const target = currentPlayers.find((p) => p.id === me.executionerTargetId);
+    if (target) {
+      description += ` Your target is ${target.name}.`;
+    } else {
+      description += " You do not have a valid target.";
+    }
+  }
+
+  roleDescription.textContent = description;
 
   roleCard.className = "role-card";
   roleCard.classList.add(info.className);
@@ -1471,7 +1485,7 @@ function renderWinScreen() {
   const me = getMe();
   const myRoleInfo = me && me.role ? getRoleInfo(me.role) : null;
 
-  winScreen.style.display = "block";
+  winScreen.style.display = "flex";
   winTitle.textContent = currentRoomData.winnerText || "Game Over";
   winSubtitle.textContent = currentRoomData.publicMessage || "";
   winYourRole.textContent = myRoleInfo ? `Your role: ${myRoleInfo.name}` : "";
@@ -1483,6 +1497,12 @@ function renderWinScreen() {
       : "You did not have a valid target.";
   } else {
     winExtra.textContent = "";
+  }
+
+  if (me && me.isHost) {
+    restartBtn.style.display = "inline-block";
+  } else {
+    restartBtn.style.display = "none";
   }
 }
 
