@@ -123,7 +123,9 @@ function getRoleInfo(role) {
       name: "Murderer",
       team: "Murderer Team",
       description: "Each night, you choose a player to kill. You win when murderers equal or outnumber all non-murderers.",
-      className: "role-murderer"
+      className: "role-murderer",
+      badgeClass: "badge-murderer",
+      teamClass: "team-murderer"
     };
   }
 
@@ -132,7 +134,9 @@ function getRoleInfo(role) {
       name: "Doctor",
       team: "Village Team",
       description: "Each night, you choose one player to protect, including yourself. If they are attacked, they survive.",
-      className: "role-villager"
+      className: "role-doctor",
+      badgeClass: "badge-doctor",
+      teamClass: "team-village"
     };
   }
 
@@ -141,7 +145,9 @@ function getRoleInfo(role) {
       name: "Watchman",
       team: "Village Team",
       description: "Each night, you investigate a player and learn their role.",
-      className: "role-villager"
+      className: "role-watchman",
+      badgeClass: "badge-watchman",
+      teamClass: "team-village"
     };
   }
 
@@ -150,7 +156,9 @@ function getRoleInfo(role) {
       name: "Executioner",
       team: "Neutral",
       description: "You win if your assigned target is voted out.",
-      className: "role-villager"
+      className: "role-executioner",
+      badgeClass: "badge-executioner",
+      teamClass: "team-neutral"
     };
   }
 
@@ -159,7 +167,9 @@ function getRoleInfo(role) {
       name: "Hysteric",
       team: "Neutral",
       description: "You win if you are voted out.",
-      className: "role-villager"
+      className: "role-hysteric",
+      badgeClass: "badge-hysteric",
+      teamClass: "team-neutral"
     };
   }
 
@@ -167,7 +177,9 @@ function getRoleInfo(role) {
     name: "Villager",
     team: "Village Team",
     description: "You have no night action. Vote out all murderers to win.",
-    className: "role-villager"
+    className: "role-villager",
+    badgeClass: "badge-villager",
+    teamClass: "team-village"
   };
 }
 
@@ -277,9 +289,15 @@ function renderAlivePlayers(players) {
 
   players.forEach((player) => {
     const li = document.createElement("li");
+    li.className = player.isAlive ? "player-row alive-player" : "player-row dead-player";
+
+    const status = player.isAlive ? "Alive" : "Dead";
+
     li.innerHTML = `
       <span class="${player.isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
+      <span class="player-status">${status}</span>
     `;
+
     alivePlayerList.appendChild(li);
   });
 }
@@ -289,7 +307,10 @@ function renderRole(role) {
   const me = getMe();
 
   roleName.textContent = info.name;
+  roleName.className = info.badgeClass;
+
   roleTeam.textContent = info.team;
+  roleTeam.className = info.teamClass;
 
   let description = info.description;
 
