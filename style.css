@@ -1870,3 +1870,25 @@ input {
     margin: 0 auto 18px;
   }
 }
+
+.player-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kick-btn {
+  padding: 6px 10px;
+  font-size: 11px;
+  border-radius: 8px;
+  border: 1px solid #8a3a3a;
+  background: linear-gradient(to bottom, #7a1b1b, #541111);
+  color: #f3dada;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.kick-btn:hover {
+  background: linear-gradient(to bottom, #9c2323, #6b1515);
+  box-shadow: 0 0 10px rgba(180, 40, 40, 0.3);
+}

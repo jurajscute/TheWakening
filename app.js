@@ -1104,6 +1104,12 @@ async function joinRoom() {
     }
 
     const playersSnap = await getDocs(collection(db, "rooms", roomCode, "players"));
+    const existingNames = playersSnap.docs.map(doc => doc.data().name.toLowerCase());
+
+if (existingNames.includes(name.toLowerCase())) {
+  alert("That name is already taken in this room.");
+  return;
+}
 
     if (playersSnap.size >= 20) {
       alert("Room is full.");
@@ -1219,14 +1225,34 @@ function subscribeToPlayers(roomCode) {
     currentPlayers = players;
 
     playerList.innerHTML = "";
+
+const me = getMe();
+
 players.forEach((player) => {
   const li = document.createElement("li");
+
+  const isHost = me && me.isHost;
+  const canKick = isHost && player.id !== currentPlayerId && currentRoomData.status === "lobby";
+
   li.innerHTML = `
-    <span class="${player.isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
-    ${player.isHost ? '<span class="host-badge">Host</span>' : ""}
+    <span>${escapeHtml(player.name)}</span>
+    <div class="player-actions">
+      ${player.isHost ? '<span class="host-badge">Host</span>' : ""}
+      ${canKick ? `<button class="kick-btn" data-id="${player.id}">Kick</button>` : ""}
+    </div>
   `;
+
   playerList.appendChild(li);
 });
+
+if (me && me.isHost && currentRoomData.status === "lobby") {
+  document.querySelectorAll(".kick-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const targetId = btn.dataset.id;
+      await kickPlayer(targetId);
+    });
+  });
+}
 
     renderAlivePlayers(players);
 
@@ -1241,6 +1267,26 @@ players.forEach((player) => {
       renderSettingsPanel();
     }
   });
+}
+
+async function kickPlayer(playerId) {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const roomSnap = await getDoc(roomRef);
+
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.hostId !== currentPlayerId) {
+      alert("Only the host can kick players.");
+      return;
+    }
+
+    await deleteDoc(doc(db, "rooms", currentRoomCode, "players", playerId));
+  } catch (error) {
+    console.error("Kick failed:", error);
+    alert("Kick failed: " + error.message);
+  }
 }
 
 function assignExecutionerTargets(players, roleAssignments) {
