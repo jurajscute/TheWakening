@@ -2206,3 +2206,39 @@ body.body-game-over {
   border-color: #7a6958;
   box-shadow: 0 0 30px rgba(255, 204, 136, 0.08);
 }
+
+.role-card-reveal-only {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  max-width: 620px;
+  overflow: visible !important;
+}
+
+.role-card-reveal-only::before,
+.role-card-reveal-only::after {
+  display: none !important;
+}
+
+#roleCardNormalContent {
+  display: block;
+}
+
+#roleCardNormalContent h3 {
+  margin-top: 0;
+}
+
+#game:not(.role-reveal-mode) #roleCard {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#game:not(.role-reveal-mode) #roleCardNormalContent {
+  display: block;
+}
+
+#menu .players-panel,
+#room .players-panel {
+  display: none;
+}

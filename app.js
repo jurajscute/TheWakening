@@ -384,10 +384,12 @@ function setRoleRevealMode(isRevealPhase) {
   if (isRevealPhase) {
     roleRevealWrap.style.display = "flex";
     roleCardNormalContent.style.display = "none";
+    roleCard.classList.add("role-card-reveal-only");
   } else {
     roleRevealWrap.style.display = "none";
     roleCardNormalContent.style.display = "block";
     roleRevealCard.classList.remove("flipped");
+    roleCard.classList.remove("role-card-reveal-only");
     hasFlippedRoleReveal = false;
   }
 }
