@@ -232,6 +232,16 @@ function showMenuUI() {
   phaseBannerTitle.textContent = "The Game Begins";
   phaseBannerText.textContent = "Prepare yourself.";
 
+document.body.classList.remove(
+  "body-role-reveal",
+  "body-night-action",
+  "body-night-result",
+  "body-morning",
+  "body-voting",
+  "body-vote-result",
+  "body-game-over"
+);
+
 gameScreen.classList.remove(
   "phase-role-reveal",
   "phase-night-action",
@@ -752,11 +762,23 @@ function setPhaseAppearance(phase) {
     "phase-vote-result",
     "phase-game-over"
   );
+
   gameScreen.classList.remove("role-reveal-mode");
 
+  document.body.classList.remove(
+    "body-role-reveal",
+    "body-night-action",
+    "body-night-result",
+    "body-morning",
+    "body-voting",
+    "body-vote-result",
+    "body-game-over"
+  );
+
   if (phase === "role_reveal") {
-    gameScreen.classList.add("role-reveal-mode");
-    gameScreen.classList.add("phase-role-reveal");
+    gameScreen.classList.add("role-reveal-mode", "phase-role-reveal");
+    document.body.classList.add("body-role-reveal");
+
     phaseBanner.className = "phase-banner phase-role-reveal";
     phaseBannerEyebrow.textContent = "Opening";
     phaseBannerTitle.textContent = "Role Reveal";
@@ -766,6 +788,8 @@ function setPhaseAppearance(phase) {
 
   if (phase === "night_action") {
     gameScreen.classList.add("phase-night-action");
+    document.body.classList.add("body-night-action");
+
     phaseBanner.className = "phase-banner phase-night-action";
     phaseBannerEyebrow.textContent = "Night";
     phaseBannerTitle.textContent = "Night Action";
@@ -775,6 +799,8 @@ function setPhaseAppearance(phase) {
 
   if (phase === "night_result") {
     gameScreen.classList.add("phase-night-result");
+    document.body.classList.add("body-night-result");
+
     phaseBanner.className = "phase-banner phase-night-result";
     phaseBannerEyebrow.textContent = "Night";
     phaseBannerTitle.textContent = "Night Results";
@@ -784,6 +810,8 @@ function setPhaseAppearance(phase) {
 
   if (phase === "morning") {
     gameScreen.classList.add("phase-morning");
+    document.body.classList.add("body-morning");
+
     phaseBanner.className = "phase-banner phase-morning";
     phaseBannerEyebrow.textContent = "Dawn";
     phaseBannerTitle.textContent = "Morning";
@@ -793,6 +821,8 @@ function setPhaseAppearance(phase) {
 
   if (phase === "voting") {
     gameScreen.classList.add("phase-voting");
+    document.body.classList.add("body-voting");
+
     phaseBanner.className = "phase-banner phase-voting";
     phaseBannerEyebrow.textContent = "Judgment";
     phaseBannerTitle.textContent = "Voting";
@@ -802,6 +832,8 @@ function setPhaseAppearance(phase) {
 
   if (phase === "vote_result") {
     gameScreen.classList.add("phase-vote-result");
+    document.body.classList.add("body-vote-result");
+
     phaseBanner.className = "phase-banner phase-vote-result";
     phaseBannerEyebrow.textContent = "Judgment";
     phaseBannerTitle.textContent = "Vote Result";
@@ -811,10 +843,12 @@ function setPhaseAppearance(phase) {
 
   if (phase === "game_over") {
     gameScreen.classList.add("phase-game-over");
+    document.body.classList.add("body-game-over");
+
     phaseBanner.className = "phase-banner phase-game-over";
     phaseBannerEyebrow.textContent = "Finale";
     phaseBannerTitle.textContent = "Game Over";
-    phaseBannerText.textContent = "The village's tale has come to an end.";
+    phaseBannerText.textContent = "The night’s tale has come to an end.";
     return;
   }
 

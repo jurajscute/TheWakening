@@ -148,7 +148,7 @@ button:disabled {
   padding: 28px;
   border-radius: 18px;
   border: 1px solid var(--border);
-  background: linear-gradient(to bottom, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  background: linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
   box-shadow: var(--shadow);
   backdrop-filter: blur(4px);
 }
@@ -2015,4 +2015,66 @@ input {
 
 #game.phase-vote-result .panel {
   border-color: #7a2f2f;
+}
+
+body {
+  transition: background 0.6s ease;
+}
+
+/* Default site background */
+body {
+  background:
+    radial-gradient(circle at top, rgba(139, 30, 30, 0.12), transparent 30%),
+    linear-gradient(to bottom, var(--bg-1), var(--bg-2) 45%, var(--bg-3));
+}
+
+/* Role Reveal */
+body.body-role-reveal {
+  background:
+    radial-gradient(circle at top, rgba(255, 204, 136, 0.16), transparent 32%),
+    linear-gradient(to bottom, #120c09, #0b0705 50%, #050303);
+}
+
+/* Night */
+body.body-night-action,
+body.body-night-result {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(120, 20, 20, 0.1), transparent 35%),
+    radial-gradient(circle at 80% 20%, rgba(60, 20, 20, 0.06), transparent 40%),
+    linear-gradient(to bottom, #040202, #020101 55%, #000000);
+}
+
+/* Morning / sunrise */
+body.body-morning {
+  background:
+    radial-gradient(circle at 50% -20%, rgba(255, 210, 150, 0.26), transparent 52%),
+    radial-gradient(circle at 72% 10%, rgba(255, 170, 100, 0.14), transparent 42%),
+    linear-gradient(to bottom, #1b110c, #0c0705 55%, #050302);
+}
+
+/* Voting / stronger sunrise */
+body.body-voting {
+  background:
+    radial-gradient(circle at 50% -24%, rgba(255, 185, 105, 0.34), transparent 56%),
+    radial-gradient(circle at 80% 12%, rgba(255, 120, 60, 0.18), transparent 44%),
+    linear-gradient(to bottom, #211108, #0d0604 56%, #040201);
+}
+
+/* Vote result / sunset */
+body.body-vote-result {
+  background:
+    radial-gradient(circle at 50% -20%, rgba(255, 120, 85, 0.28), transparent 55%),
+    radial-gradient(circle at 72% 10%, rgba(190, 60, 60, 0.18), transparent 45%),
+    linear-gradient(to bottom, #190909, #090404 58%, #030101);
+}
+
+/* Game over */
+body.body-game-over {
+  background:
+    radial-gradient(circle at top, rgba(180, 40, 40, 0.16), transparent 30%),
+    linear-gradient(to bottom, #120707, #080303 55%, #020101);
+}
+
+#game {
+  background: linear-gradient(to bottom, rgba(12, 8, 8, 0.74), rgba(8, 5, 5, 0.68));
 }
