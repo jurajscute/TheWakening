@@ -1646,7 +1646,7 @@ input {
   border-radius: 50%;
   background: #f1e4d3;
   box-shadow: 0 2px 6px rgba(0,0,0,0.24);
-  transition: transform 0.22s ease, background 0.22s ease;
+  transition: left 0.22s ease, background 0.22s ease;
 }
 
 .switch input:checked + .switch-slider {
@@ -1656,7 +1656,7 @@ input {
 }
 
 .switch input:checked + .switch-slider::before {
-  transform: translateX(18px);
+  left: calc(100% - 17px);
   background: #fff8ee;
 }
 
