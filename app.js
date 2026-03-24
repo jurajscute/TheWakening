@@ -123,14 +123,6 @@ function playSound(name, volume = 1) {
   } catch (_) {}
 }
 
-function stopAmbient() {
-  if (sounds.ambient) {
-    sounds.ambient.pause();
-    sounds.ambient.currentTime = 0;
-    sounds.ambient = null;
-  }
-}
-
 function playAmbient(src, volume = 0.35) {
   if (sounds.ambient && sounds.ambient.dataset?.src === src) return;
 
