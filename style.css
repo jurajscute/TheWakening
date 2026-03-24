@@ -1546,7 +1546,7 @@ input {
 
 .role-setting-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) 120px 90px minmax(180px, 1fr);
+  grid-template-columns: minmax(0, 1.45fr) 90px 78px minmax(150px, 0.9fr);
   gap: 14px;
   align-items: center;
   margin: 12px 0;
@@ -1563,15 +1563,16 @@ input {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
 }
 
 .role-setting-label {
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.4px;
   color: var(--muted);
+  opacity: 0.9;
 }
 
 .max-input {
@@ -1600,18 +1601,19 @@ input {
 }
 
 .weight-value {
-  min-width: 32px;
+  min-width: 34px;
   text-align: right;
   color: var(--gold);
   font-weight: bold;
-  font-size: 13px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
 }
 
 .switch {
   position: relative;
   display: inline-block;
-  width: 46px;
-  height: 26px;
+  width: 38px;
+  height: 22px;
 }
 
 .switch input {
@@ -1624,40 +1626,41 @@ input {
 
 .switch-slider {
   position: absolute;
-  cursor: pointer;
   inset: 0;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid #6a4a39;
+  cursor: pointer;
   border-radius: 999px;
-  transition: 0.22s ease;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  border: 1px solid #6f5444;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.22);
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .switch-slider::before {
   content: "";
   position: absolute;
-  height: 18px;
-  width: 18px;
+  width: 14px;
+  height: 14px;
   left: 3px;
   top: 3px;
-  background: #f3eadf;
   border-radius: 50%;
-  transition: 0.22s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  background: #f1e4d3;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.24);
+  transition: transform 0.22s ease, background 0.22s ease;
 }
 
 .switch input:checked + .switch-slider {
-  background: linear-gradient(to bottom, #b98b58, #7a5735);
-  border-color: #d8b487;
+  background: linear-gradient(to bottom, #b98b58, #7b5938);
+  border-color: #ddb889;
+  box-shadow: 0 0 10px rgba(185, 139, 88, 0.18);
 }
 
 .switch input:checked + .switch-slider::before {
-  transform: translateX(20px);
-  background: #fff7ea;
+  transform: translateX(16px);
+  background: #fff8ee;
 }
 
 .switch input:disabled + .switch-slider {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -1689,4 +1692,67 @@ input {
   .weight-control-row {
     width: 100%;
   }
+}
+
+.weight-slider {
+  width: 100%;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* WebKit track */
+.weight-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #6e4f34, #b98b58);
+  border: 1px solid rgba(216, 180, 135, 0.28);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* WebKit thumb */
+.weight-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: #fff3df;
+  border: 2px solid #d8b487;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.weight-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(216, 180, 135, 0.28);
+}
+
+/* Firefox track */
+.weight-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #6e4f34, #b98b58);
+  border: 1px solid rgba(216, 180, 135, 0.28);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Firefox thumb */
+.weight-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff3df;
+  border: 2px solid #d8b487;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.weight-slider:hover::-moz-range-thumb {
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(216, 180, 135, 0.28);
 }
