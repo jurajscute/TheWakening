@@ -72,6 +72,7 @@ const settingsPanel = document.getElementById("settingsPanel");
 const settingsContent = document.getElementById("settingsContent");
 
 const nameInput = document.getElementById("nameInput");
+const SAVED_NAME_KEY = "the_wakening_player_name";
 const roomInput = document.getElementById("roomInput");
 
 const winScreen = document.getElementById("winScreen");
@@ -87,6 +88,13 @@ const joinBtn = document.getElementById("joinBtn");
 const startBtn = document.getElementById("startBtn");
 const leaveBtn = document.getElementById("leaveBtn");
 const restartBtn = document.getElementById("restartBtn");
+
+const lobbyWarnings = document.getElementById("lobbyWarnings");
+
+const savedName = localStorage.getItem(SAVED_NAME_KEY);
+if (savedName) {
+  nameInput.value = savedName;
+}
 
 function getDefaultRoleSettings() {
   return {
@@ -201,6 +209,8 @@ function showGameUI(roomCode) {
 }
 
 function showMenuUI() {
+  lobbyWarnings.style.display = "none";
+  lobbyWarnings.innerHTML = "";
   menu.style.display = "block";
   winScreen.style.display = "none";
   roomScreen.style.display = "none";
@@ -336,6 +346,31 @@ function renderRole(role) {
 function renderPublicMessage() {
   if (!currentRoomData) return;
   publicMessageText.textContent = currentRoomData.publicMessage || "No message yet.";
+}
+
+function renderLobbyWarnings() {
+  if (!currentRoomData || currentRoomData.status !== "lobby") {
+    lobbyWarnings.style.display = "none";
+    lobbyWarnings.innerHTML = "";
+    return;
+  }
+
+  const settings = currentRoomData.settings?.roles || getDefaultRoleSettings();
+  const errors = validateLobbySetup(currentPlayers, settings);
+
+  if (errors.length === 0) {
+    lobbyWarnings.style.display = "none";
+    lobbyWarnings.innerHTML = "";
+    return;
+  }
+
+  lobbyWarnings.style.display = "block";
+  lobbyWarnings.innerHTML = `
+    <div class="lobby-warning-title">Setup Warnings</div>
+    <ul>
+      ${errors.map((error) => `<li>${escapeHtml(error)}</li>`).join("")}
+    </ul>
+  `;
 }
 
 function renderSettingsPanel() {
@@ -1026,6 +1061,7 @@ async function maybeAdvanceAfterNightResult() {
 async function createRoom() {
   try {
     const name = nameInput.value.trim();
+    localStorage.setItem(SAVED_NAME_KEY, name);
     if (!name) {
       alert("Please enter your name.");
       return;
@@ -1081,6 +1117,7 @@ async function createRoom() {
 async function joinRoom() {
   try {
     const name = nameInput.value.trim();
+    localStorage.setItem(SAVED_NAME_KEY, name);
     const roomCode = roomInput.value.trim().toUpperCase();
 
     if (!name || !roomCode) {
@@ -1168,6 +1205,7 @@ function subscribeToRoom(roomCode) {
       restartBtn.style.display = "none";
       hostGameControls.style.display = "none";
       renderSettingsPanel();
+      renderLobbyWarnings();
     } else {
       showGameUI(roomCode);
       setPhaseAppearance(currentRoomData.phase);
@@ -1265,6 +1303,7 @@ if (me && me.isHost && currentRoomData.status === "lobby") {
     renderWinScreen();
     if (currentRoomData?.status === "lobby") {
       renderSettingsPanel();
+      renderLobbyWarnings();
     }
   });
 }
@@ -1310,6 +1349,46 @@ function assignExecutionerTargets(players, roleAssignments) {
   return targetMap;
 }
 
+function validateLobbySetup(players, settings) {
+  const errors = [];
+
+  if (players.length < 2) {
+    errors.push("You need at least 2 players to start.");
+  }
+
+  const murdererSettings = settings.murderer;
+
+  if (!murdererSettings || !murdererSettings.enabled) {
+    errors.push("Murderer must be enabled.");
+  }
+
+  if (!murdererSettings || murdererSettings.max < 1) {
+    errors.push("Murderer max must be at least 1.");
+  }
+
+  const guaranteedMurderers = Math.max(1, murdererSettings?.max || 1);
+
+  if (guaranteedMurderers >= players.length) {
+    errors.push("There must be at least one non-murderer player.");
+  }
+
+  const optionalRoles = ["doctor", "watchman", "executioner", "hysteric"];
+  let totalPossibleSpecials = guaranteedMurderers;
+
+  optionalRoles.forEach((roleKey) => {
+    const role = settings[roleKey];
+    if (role?.enabled && role.max > 0) {
+      totalPossibleSpecials += role.max;
+    }
+  });
+
+  if (totalPossibleSpecials < 1) {
+    errors.push("At least one role must be available.");
+  }
+
+  return errors;
+}
+
 async function startGame() {
   try {
     const roomRef = doc(db, "rooms", currentRoomCode);
@@ -1330,6 +1409,13 @@ async function startGame() {
 
     const players = playersSnap.docs.map((docSnap) => docSnap.data());
     const settings = roomData.settings?.roles || getDefaultRoleSettings();
+    const validationErrors = validateLobbySetup(players, settings);
+
+if (validationErrors.length > 0) {
+  alert(validationErrors.join("\n"));
+  return;
+}
+
     const roleAssignments = buildRoleAssignments(players, settings);
     const executionerTargets = assignExecutionerTargets(players, roleAssignments);
 
@@ -2029,7 +2115,9 @@ async function leaveRoom(showMessage = true) {
     alert("You left the room.");
   }
 }
-
+nameInput.addEventListener("input", () => {
+  localStorage.setItem(SAVED_NAME_KEY, nameInput.value.trim());
+});
 returnToLobbyBtn.addEventListener("click", returnGameToLobby);
 createBtn.addEventListener("click", createRoom);
 joinBtn.addEventListener("click", joinRoom);

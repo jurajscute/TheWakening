@@ -1892,3 +1892,31 @@ input {
   background: linear-gradient(to bottom, #9c2323, #6b1515);
   box-shadow: 0 0 10px rgba(180, 40, 40, 0.3);
 }
+
+.lobby-warnings {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(194, 90, 90, 0.35);
+  background: rgba(120, 25, 25, 0.12);
+  text-align: left;
+}
+
+.lobby-warning-title {
+  color: #ffb3b3;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 12px;
+}
+
+.lobby-warnings ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #f0d6d6;
+}
+
+.lobby-warnings li {
+  margin: 6px 0;
+}
