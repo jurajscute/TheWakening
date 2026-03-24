@@ -2353,3 +2353,91 @@ body.body-game-over {
   align-items: center;
   will-change: transform;
 }
+
+.message-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.message-panel-header {
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.message-panel-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.message-scroll {
+  position: relative;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.message-scroll::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.03), transparent 45%);
+  pointer-events: none;
+}
+
+.public-message-panel {
+  border-color: #5a4032;
+}
+
+.public-message-panel .message-scroll {
+  background:
+    radial-gradient(circle at top, rgba(255, 204, 136, 0.05), transparent 35%),
+    linear-gradient(to bottom, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+}
+
+#publicMessageText {
+  margin: 0;
+  color: #f2e5d3;
+  font-size: 22px;
+  line-height: 1.6;
+  text-align: center;
+  font-style: italic;
+}
+
+.private-message-panel {
+  border-color: #5a3550;
+}
+
+.private-message-panel .message-scroll {
+  background:
+    radial-gradient(circle at top right, rgba(210, 150, 200, 0.05), transparent 35%),
+    linear-gradient(to bottom, rgba(255,255,255,0.03), rgba(255,255,255,0.018));
+}
+
+#privateMessageText {
+  margin: 0;
+  color: #f0deeb;
+  font-size: 17px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+#game.phase-night-result .private-message-panel {
+  box-shadow: 0 0 24px rgba(160, 105, 145, 0.08);
+}
+
+#game.phase-morning .public-message-panel {
+  box-shadow: 0 0 24px rgba(255, 204, 136, 0.08);
+}
+
+#game.phase-vote-result .public-message-panel {
+  box-shadow: 0 0 24px rgba(200, 90, 90, 0.08);
+}
