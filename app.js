@@ -97,6 +97,7 @@ const restartBtn = document.getElementById("restartBtn");
 const roleRevealWrap = document.getElementById("roleRevealWrap");
 const roleRevealCard = document.getElementById("roleRevealCard");
 const roleCardNormalContent = document.getElementById("roleCardNormalContent");
+const roleRevealFloat = document.getElementById("roleRevealFloat");
 
 const lobbyWarnings = document.getElementById("lobbyWarnings");
 
@@ -389,6 +390,8 @@ function setRoleRevealMode(isRevealPhase) {
     roleRevealWrap.style.display = "none";
     roleCardNormalContent.style.display = "block";
     roleRevealCard.classList.remove("flipped");
+    roleRevealCard.classList.remove("reveal-glow");
+    roleRevealFloat.classList.remove("revealed");
     roleCard.classList.remove("role-card-reveal-only");
     hasFlippedRoleReveal = false;
   }
@@ -398,6 +401,7 @@ function flipRoleRevealCard() {
   if (hasFlippedRoleReveal) return;
 
   hasFlippedRoleReveal = true;
+  roleRevealFloat.classList.add("revealed");
   roleRevealCard.classList.add("flipped");
 
   setTimeout(() => {
@@ -873,18 +877,20 @@ function setPhaseAppearance(phase) {
   );
 
   if (phase === "role_reveal") {
-    hasFlippedRoleReveal = false;
-    roleRevealCard.classList.remove("flipped");
+  hasFlippedRoleReveal = false;
+  roleRevealCard.classList.remove("flipped");
+  roleRevealCard.classList.remove("reveal-glow");
+  roleRevealFloat.classList.remove("revealed");
 
-    gameScreen.classList.add("role-reveal-mode", "phase-role-reveal");
-    document.body.classList.add("body-role-reveal");
+  gameScreen.classList.add("role-reveal-mode", "phase-role-reveal");
+  document.body.classList.add("body-role-reveal");
 
-    phaseBanner.className = "phase-banner phase-role-reveal";
-    phaseBannerEyebrow.textContent = "Opening";
-    phaseBannerTitle.textContent = "Role Reveal";
-    phaseBannerText.textContent = "Study your fate before the first night begins.";
-    return;
-  }
+  phaseBanner.className = "phase-banner phase-role-reveal";
+  phaseBannerEyebrow.textContent = "Opening";
+  phaseBannerTitle.textContent = "Role Reveal";
+  phaseBannerText.textContent = "Study your fate before the first night begins.";
+  return;
+}
 
   if (phase === "night_action") {
     playAmbient("sounds/night.mp3", 0.35);

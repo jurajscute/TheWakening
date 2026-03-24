@@ -2180,18 +2180,17 @@ body.body-game-over {
   transform: rotateY(180deg);
 }
 
-/* Hover before reveal */
-#game.role-reveal-mode .role-reveal-card:not(.flipped) {
+
+#game.role-reveal-mode .role-reveal-float:not(.revealed) {
   animation: revealFloat 2.8s ease-in-out infinite;
 }
 
-#game.role-reveal-mode .role-reveal-card:not(.flipped):hover {
+#game.role-reveal-mode .role-reveal-float:not(.revealed):hover {
   transform: translateY(-6px) scale(1.02);
 }
 
-/* Keep flipped card stable */
-#game.role-reveal-mode .role-reveal-card.flipped:hover {
-  transform: rotateY(180deg) scale(1.01);
+#game.role-reveal-mode .role-reveal-float.revealed:hover {
+  transform: none;
 }
 
 /* Make the outer role card disappear during reveal mode */
@@ -2346,4 +2345,11 @@ body.body-game-over {
 
 .role-card.role-villager .role-reveal-front {
   box-shadow: 0 0 22px rgba(255, 204, 136, 0.04);
+}
+
+.role-reveal-float {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  will-change: transform;
 }
