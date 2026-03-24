@@ -1195,7 +1195,6 @@ if (me && me.isHost && currentRoomData.status === "in_progress") {
   hostGameControls.style.display = "none";
 }
 
-      const me = getMe();
       if (currentRoomData.phase === "game_over" && me && me.isHost) {
         restartBtn.style.display = "inline-block";
       } else {
