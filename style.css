@@ -1920,3 +1920,80 @@ input {
 .lobby-warnings li {
   margin: 6px 0;
 }
+
+/* Base transition */
+#game {
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* NIGHT — darker, colder */
+#game.phase-night-action,
+#game.phase-night-result {
+  background:
+    radial-gradient(circle at top, rgba(40, 20, 20, 0.25), transparent 40%),
+    linear-gradient(to bottom, rgba(10, 6, 6, 0.98), rgba(6, 3, 3, 1));
+}
+
+/* MORNING — warmer */
+#game.phase-morning {
+  background:
+    radial-gradient(circle at top, rgba(120, 90, 60, 0.18), transparent 40%),
+    linear-gradient(to bottom, rgba(18, 12, 10, 0.96), rgba(10, 6, 6, 1));
+}
+
+/* VOTING — tense, sharp */
+#game.phase-voting {
+  background:
+    radial-gradient(circle at top, rgba(120, 60, 30, 0.2), transparent 40%),
+    linear-gradient(to bottom, rgba(20, 10, 6, 0.98), rgba(8, 4, 2, 1));
+}
+
+/* VOTE RESULT — heavy */
+#game.phase-vote-result {
+  background:
+    radial-gradient(circle at top, rgba(140, 50, 50, 0.18), transparent 40%),
+    linear-gradient(to bottom, rgba(16, 8, 8, 0.98), rgba(6, 3, 3, 1));
+}
+
+#game.phase-night-action .panel,
+#game.phase-night-result .panel {
+  border-color: #3a2323;
+}
+
+#game.phase-morning .panel {
+  border-color: #5a4633;
+}
+
+#game.phase-voting .panel {
+  border-color: #6a3f1f;
+}
+
+#game.phase-vote-result .panel {
+  border-color: #6a2f2f;
+}
+
+#game.phase-night-action #phaseBanner,
+#game.phase-night-result #phaseBanner {
+  box-shadow: 0 0 22px rgba(120, 40, 40, 0.18);
+}
+
+#game.phase-morning #phaseBanner {
+  box-shadow: 0 0 22px rgba(180, 140, 90, 0.18);
+}
+
+#game.phase-voting #phaseBanner {
+  box-shadow: 0 0 22px rgba(200, 120, 60, 0.18);
+}
+
+#game.phase-vote-result #phaseBanner {
+  box-shadow: 0 0 26px rgba(180, 60, 60, 0.22);
+}
+
+#game::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 60%, rgba(0,0,0,0.35));
+  opacity: 0.6;
+}
