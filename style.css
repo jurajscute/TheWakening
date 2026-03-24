@@ -1614,7 +1614,13 @@ input {
   position: relative;
   display: inline-block;
   width: 44px;
+  min-width: 44px;
+  max-width: 44px;
   height: 24px;
+  min-height: 24px;
+  max-height: 24px;
+  flex: 0 0 44px;
+  vertical-align: middle;
 }
 
 .switch input {
@@ -1658,7 +1664,7 @@ input {
 }
 
 .switch input:checked + .switch-slider::before {
-  transform: translateX(65px);
+  transform: translateX(22px);
   background: #fff8ee;
 }
 
@@ -1672,6 +1678,9 @@ input {
   border: none;
   padding: 0;
   min-height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 860px) {
@@ -1803,4 +1812,17 @@ input {
 
 .switch:hover .switch-slider {
   border-color: #caa27f;
+}
+
+.role-setting-control-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.role-setting-control-block .switch {
+  align-self: center;
 }
