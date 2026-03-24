@@ -44,6 +44,9 @@ const menu = document.getElementById("menu");
 const roomScreen = document.getElementById("room");
 const gameScreen = document.getElementById("game");
 
+const hostGameControls = document.getElementById("hostGameControls");
+const returnToLobbyBtn = document.getElementById("returnToLobbyBtn");
+
 const phaseBanner = document.getElementById("phaseBanner");
 const phaseBannerEyebrow = document.getElementById("phaseBannerEyebrow");
 const phaseBannerTitle = document.getElementById("phaseBannerTitle");
@@ -213,6 +216,7 @@ function showMenuUI() {
   settingsContent.innerHTML = "";
   startBtn.style.display = "none";
   restartBtn.style.display = "none";
+  hostGameControls.style.display = "none";
   phaseBanner.className = "phase-banner";
   phaseBannerEyebrow.textContent = "Phase";
   phaseBannerTitle.textContent = "The Game Begins";
@@ -1156,6 +1160,7 @@ function subscribeToRoom(roomCode) {
       startBtn.style.display = currentRoomData.hostId === currentPlayerId ? "inline-block" : "none";
       winScreen.style.display = "none";
       restartBtn.style.display = "none";
+      hostGameControls.style.display = "none";
       renderSettingsPanel();
     } else {
       showGameUI(roomCode);
@@ -1182,6 +1187,13 @@ function subscribeToRoom(roomCode) {
       renderPublicMessage();
       renderActionPanel();
       renderWinScreen();
+
+const me = getMe();
+if (me && me.isHost && currentRoomData.status === "in_progress") {
+  hostGameControls.style.display = "block";
+} else {
+  hostGameControls.style.display = "none";
+}
 
       const me = getMe();
       if (currentRoomData.phase === "game_over" && me && me.isHost) {
@@ -1306,6 +1318,54 @@ async function startGame() {
   } catch (error) {
     console.error("Start game failed:", error);
     alert("Start game failed: " + error.message);
+  }
+}
+
+async function returnGameToLobby() {
+  try {
+    const roomRef = doc(db, "rooms", currentRoomCode);
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists()) return;
+
+    const roomData = roomSnap.data();
+    if (roomData.hostId !== currentPlayerId) {
+      alert("Only the host can return the game to the lobby.");
+      return;
+    }
+
+    const playersSnap = await getDocs(collection(db, "rooms", currentRoomCode, "players"));
+    const players = playersSnap.docs.map((docSnap) => docSnap.data());
+
+    const batch = writeBatch(db);
+
+    players.forEach((player) => {
+      batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
+        role: null,
+        team: null,
+        isAlive: true,
+        readyForPhase: false,
+        nightActionTargetId: null,
+        protectTargetId: null,
+        investigateTargetId: null,
+        voteTargetId: null,
+        privateMessage: "",
+        executionerTargetId: null
+      });
+    });
+
+    batch.update(roomRef, {
+      status: "lobby",
+      phase: "lobby",
+      dayNumber: 0,
+      publicMessage: "The room is waiting for players.",
+      winner: null,
+      winnerText: ""
+    });
+
+    await batch.commit();
+  } catch (error) {
+    console.error("Return to lobby failed:", error);
+    alert("Return to lobby failed: " + error.message);
   }
 }
 
@@ -1925,6 +1985,7 @@ async function leaveRoom(showMessage = true) {
   }
 }
 
+returnToLobbyBtn.addEventListener("click", returnGameToLobby);
 createBtn.addEventListener("click", createRoom);
 joinBtn.addEventListener("click", joinRoom);
 startBtn.addEventListener("click", startGame);
