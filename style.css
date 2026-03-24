@@ -158,8 +158,14 @@ button:disabled {
 #actionText,
 #publicMessageText,
 .setting-note {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid #3a2a21;
   color: var(--muted);
   font-style: italic;
+  text-align: center;
 }
 
 .panel {
@@ -249,15 +255,18 @@ button:disabled {
   gap: 12px;
   align-items: center;
   margin: 12px 0;
-  padding: 14px;
-  border: 1px solid #33241d;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
+  padding: 16px;
+  border: 1px solid #3a2a21;
+  border-radius: 14px;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
 }
 
 .role-setting-title {
   font-weight: bold;
   color: var(--text);
+  font-size: 16px;
 }
 
 .role-setting-controls {
@@ -265,12 +274,21 @@ button:disabled {
 }
 
 .role-setting-row label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   color: var(--muted);
 }
 
+.role-setting-row input[type="checkbox"] {
+  transform: scale(1.1);
+  accent-color: #9a2a2a;
+}
+
 .role-setting-row input[type="number"] {
-  width: 90px;
+  width: 88px;
+  margin-left: 0;
 }
 
 #winScreen {
@@ -1248,4 +1266,141 @@ input {
 #game.role-reveal-mode .action-continue:hover {
   background: linear-gradient(to bottom, #b98b58, #7c5d3d);
   box-shadow: 0 16px 36px rgba(145, 105, 60, 0.32);
+}
+
+/* Lobby hero */
+.lobby-hero {
+  margin-bottom: 22px;
+  padding: 22px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.28s ease;
+}
+
+.lobby-hero-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.lobby-room-title {
+  margin: 0 0 8px;
+}
+
+/* Lobby layout */
+.lobby-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.85fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.lobby-main-column,
+.lobby-side-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lobby-panel {
+  text-align: left;
+}
+
+.lobby-panel h3 {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.lobby-panel-subtitle {
+  margin-top: 0;
+  margin-bottom: 16px;
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Stronger room action area */
+#room .room-button-row {
+  margin-top: 24px;
+}
+
+#playerList {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  max-width: none;
+}
+
+#playerList li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin: 10px 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid #33241d;
+  background: var(--panel-strong);
+  text-align: left;
+}
+
+#playerList li::before {
+  display: none;
+}
+
+#playerList li span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#playerList li span:first-child::before {
+  content: "✦";
+  color: var(--gold);
+  opacity: 0.8;
+}
+
+.host-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 204, 136, 0.1);
+  border: 1px solid rgba(255, 204, 136, 0.25);
+  color: var(--gold);
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+#startBtn {
+  background: linear-gradient(to bottom, #b98b58, #7a5735);
+  border-color: #d8b487;
+  color: #fff7ea;
+  box-shadow: 0 12px 30px rgba(145, 105, 60, 0.28);
+  min-width: 220px;
+}
+
+#startBtn:hover {
+  background: linear-gradient(to bottom, #c99a63, #8a643d);
+  box-shadow: 0 16px 36px rgba(165, 115, 65, 0.34);
+}
+
+#leaveBtn {
+  background: linear-gradient(to bottom, #5e4b44, #433530);
+  border-color: #9a8278;
+}
+
+#leaveBtn:hover {
+  background: linear-gradient(to bottom, #725b53, #52413b);
+}
+
+@media (max-width: 900px) {
+  .lobby-layout {
+    grid-template-columns: 1fr;
+  }
 }

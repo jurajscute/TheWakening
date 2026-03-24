@@ -29,22 +29,39 @@
     </div>
 
     <div id="room" style="display:none;">
-      <h2>Room: <span id="roomCode"></span></h2>
-      <p id="roomStatus"></p>
+  <div class="lobby-hero">
+    <div class="lobby-hero-eyebrow">Gathering</div>
+    <h2 class="lobby-room-title">Room: <span id="roomCode"></span></h2>
+    <p id="roomStatus"></p>
+  </div>
 
-      <div id="settingsPanel" class="panel">
+  <div class="lobby-layout">
+    <div class="lobby-main-column">
+      <div id="settingsPanel" class="panel lobby-panel">
         <h3>Role Settings</h3>
+        <p class="lobby-panel-subtitle">
+          Shape the next match before the ritual begins.
+        </p>
         <div id="settingsContent"></div>
       </div>
-
-      <h3>Players</h3>
-      <ul id="playerList"></ul>
-
-      <div class="room-button-row">
-  <button id="startBtn" style="display:none;">Start Game</button>
-  <button id="leaveBtn">Leave Room</button>
-</div>
     </div>
+
+    <div class="lobby-side-column">
+      <div class="panel lobby-panel">
+        <h3>Players</h3>
+        <p class="lobby-panel-subtitle">
+          Those currently gathered in the room.
+        </p>
+        <ul id="playerList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="room-button-row">
+    <button id="startBtn" style="display:none;">Start Game</button>
+    <button id="leaveBtn">Leave Room</button>
+  </div>
+</div>
 
     <div id="game" style="display:none;">
   <div id="phaseBanner" class="phase-banner">

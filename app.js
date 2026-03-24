@@ -1101,14 +1101,14 @@ function subscribeToPlayers(roomCode) {
     currentPlayers = players;
 
     playerList.innerHTML = "";
-    players.forEach((player) => {
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span class="${player.isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
-        ${player.isHost ? '<span class="host-badge"> (Host)</span>' : ""}
-      `;
-      playerList.appendChild(li);
-    });
+players.forEach((player) => {
+  const li = document.createElement("li");
+  li.innerHTML = `
+    <span class="${player.isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
+    ${player.isHost ? '<span class="host-badge">Host</span>' : ""}
+  `;
+  playerList.appendChild(li);
+});
 
     renderAlivePlayers(players);
 
