@@ -606,8 +606,10 @@ function setPhaseAppearance(phase) {
     "phase-vote-result",
     "phase-game-over"
   );
+  gameScreen.classList.remove("role-reveal-mode");
 
   if (phase === "role_reveal") {
+    gameScreen.classList.add("role-reveal-mode");
     gameScreen.classList.add("phase-role-reveal");
     phaseBanner.className = "phase-banner phase-role-reveal";
     phaseBannerEyebrow.textContent = "Opening";
@@ -695,7 +697,7 @@ if (currentRoomData.phase === "role_reveal") {
     return;
   }
 
-  actionText.textContent = "Read your role carefully, then continue.";
+  actionText.textContent = "Read your role carefully. When you are ready, step into the night.";
 
   const btn = document.createElement("button");
   btn.textContent = "Continue";
