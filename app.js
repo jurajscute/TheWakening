@@ -1294,7 +1294,6 @@ if (me && me.isHost && currentRoomData.status === "lobby") {
 
     renderAlivePlayers(players);
 
-    const me = getMe();
     if (me && me.role) {
       renderRole(me.role);
     }
