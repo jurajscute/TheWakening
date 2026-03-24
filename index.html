@@ -71,85 +71,77 @@
     <div id="phaseBannerText" class="phase-banner-text">Prepare yourself.</div>
   </div>
 
-<div id="hostGameControls" class="host-game-controls" style="display:none;">
-  <div class="host-game-controls-title">Host Controls</div>
-  <button id="returnToLobbyBtn" class="danger-control-btn">Return to Lobby</button>
-</div>
+  <div id="hostGameControls" class="host-game-controls" style="display:none;">
+    <div class="host-game-controls-title">Host Controls</div>
+    <button id="returnToLobbyBtn" class="danger-control-btn">Return to Lobby</button>
+  </div>
 
   <h2>Room: <span id="gameRoomCode"></span></h2>
-<p id="phaseText"></p>
+  <p id="phaseText"></p>
 
-<div class="game-layout">
-  <div class="game-main-column">
-    <div id="roleCard" class="role-card">
-  <div id="roleRevealWrap" class="role-reveal-wrap" style="display:none;">
-    <div id="roleRevealCard" class="role-reveal-card">
-      <div class="role-reveal-face role-reveal-front">
-        <div class="role-reveal-front-title">The Wakening</div>
-        <div class="role-reveal-front-subtitle">Click to reveal your fate</div>
+  <div class="game-layout">
+    <div class="game-main-column">
+      <div id="roleCard" class="role-card">
+        <div id="roleRevealWrap" class="role-reveal-wrap" style="display:none;">
+          <div id="roleRevealCard" class="role-reveal-card">
+            <div class="role-reveal-face role-reveal-front">
+              <div class="role-reveal-front-title">The Wakening</div>
+              <div class="role-reveal-front-subtitle">Click to reveal your fate</div>
+            </div>
+
+            <div class="role-reveal-face role-reveal-back">
+              <h3>Your Role</h3>
+              <p id="roleNameReveal">Unknown</p>
+              <p id="roleTeamReveal"></p>
+              <p id="roleDescriptionReveal"></p>
+            </div>
+          </div>
+        </div>
+
+        <div id="roleCardNormalContent">
+          <h3>Your Role</h3>
+          <p id="roleName">Unknown</p>
+          <p id="roleTeam"></p>
+          <p id="roleDescription"></p>
+        </div>
       </div>
 
-      <div class="role-reveal-face role-reveal-back">
-        <h3>Your Role</h3>
-        <p id="roleNameReveal">Unknown</p>
-        <p id="roleTeamReveal"></p>
-        <p id="roleDescriptionReveal"></p>
+      <div id="messagePanel" class="panel">
+        <h3>Public Message</h3>
+        <p id="publicMessageText"></p>
+      </div>
+
+      <div id="actionPanel" class="panel">
+        <h3>Phase Action</h3>
+        <p id="actionText"></p>
+        <div id="actionControls"></div>
+      </div>
+    </div>
+
+    <div class="game-side-column">
+      <div class="panel players-panel">
+        <h3>Players</h3>
+        <ul id="alivePlayerList"></ul>
       </div>
     </div>
   </div>
 
-  <div id="roleCardNormalContent">
-    <h3>Your Role</h3>
-    <p id="roleName">Unknown</p>
-    <p id="roleTeam"></p>
-    <p id="roleDescription"></p>
-  </div>
-</div>
-  </div>
+  <div id="winScreen">
+    <div id="winScreenContent">
+      <h2 id="winTitle">Game Over</h2>
+      <p id="winSubtitle"></p>
+      <p id="winYourRole"></p>
+      <p id="winExtra"></p>
 
-  <div id="roleCardNormalContent">
-    <h3>Your Role</h3>
-    <p id="roleNameFallback" style="display:none;"></p>
-  </div>
-</div>
+      <div class="panel">
+        <h3>Final Roles</h3>
+        <ul id="finalRoleList"></ul>
+      </div>
 
-    <div id="messagePanel" class="panel">
-      <h3>Public Message</h3>
-      <p id="publicMessageText"></p>
-    </div>
-
-    <div id="actionPanel" class="panel">
-      <h3>Phase Action</h3>
-      <p id="actionText"></p>
-      <div id="actionControls"></div>
-    </div>
-  </div>
-
-  <div class="game-side-column">
-    <div class="panel players-panel">
-      <h3>Players</h3>
-      <ul id="alivePlayerList"></ul>
+      <button id="restartBtn" style="display:none;">Restart To Lobby</button>
     </div>
   </div>
 </div>
-
-<div id="winScreen">
-  <div id="winScreenContent">
-    <h2 id="winTitle">Game Over</h2>
-    <p id="winSubtitle"></p>
-    <p id="winYourRole"></p>
-    <p id="winExtra"></p>
-
-    <div class="panel">
-      <h3>Final Roles</h3>
-      <ul id="finalRoleList"></ul>
-    </div>
-
-    <button id="restartBtn" style="display:none;">Restart To Lobby</button>
-  </div>
-</div>
-    </div>
-  </div>
 
   <script type="module" src="app.js"></script>
 </body>
