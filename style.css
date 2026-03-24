@@ -1451,6 +1451,7 @@ input {
   flex-direction: column;
   justify-content: center;
   gap: 4px;
+  padding-left: 6px;
 }
 
 .role-setting-title {
@@ -1655,7 +1656,7 @@ input {
 }
 
 .switch input:checked + .switch-slider::before {
-  transform: translateX(16px);
+  transform: translateX(18px);
   background: #fff8ee;
 }
 
@@ -1755,4 +1756,45 @@ input {
 .weight-slider:hover::-moz-range-thumb {
   transform: scale(1.08);
   box-shadow: 0 0 10px rgba(216, 180, 135, 0.28);
+}
+
+.role-setting-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.role-setting-card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 999px;
+  opacity: 0.95;
+}
+
+/* Faction/role accent stripes */
+.role-setting-murderer::after {
+  background: linear-gradient(to bottom, #c24848, #7f1515);
+}
+
+.role-setting-doctor::after {
+  background: linear-gradient(to bottom, #7ed39a, #3f7d52);
+}
+
+.role-setting-watchman::after {
+  background: linear-gradient(to bottom, #d3ae78, #7a5c3a);
+}
+
+.role-setting-executioner::after {
+  background: linear-gradient(to bottom, #d4a2c8, #7a4b68);
+}
+
+.role-setting-hysteric::after {
+  background: linear-gradient(to bottom, #ff89c4, #b03f78);
+}
+
+.role-setting-card:hover::after {
+  filter: brightness(1.15);
 }
