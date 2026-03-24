@@ -65,6 +65,10 @@ const roleName = document.getElementById("roleName");
 const roleTeam = document.getElementById("roleTeam");
 const roleDescription = document.getElementById("roleDescription");
 
+const roleNameReveal = document.getElementById("roleNameReveal");
+const roleTeamReveal = document.getElementById("roleTeamReveal");
+const roleDescriptionReveal = document.getElementById("roleDescriptionReveal");
+
 const publicMessageText = document.getElementById("publicMessageText");
 const actionText = document.getElementById("actionText");
 const actionControls = document.getElementById("actionControls");
@@ -378,11 +382,11 @@ function renderAlivePlayers(players) {
 
 function setRoleRevealMode(isRevealPhase) {
   if (isRevealPhase) {
-    roleRevealWrap.style.display = "block";
+    roleRevealWrap.style.display = "flex";
     roleCardNormalContent.style.display = "none";
   } else {
     roleRevealWrap.style.display = "none";
-    roleCardNormalContent.style.display = "none";
+    roleCardNormalContent.style.display = "block";
     roleRevealCard.classList.remove("flipped");
     hasFlippedRoleReveal = false;
   }
@@ -399,12 +403,6 @@ function renderRole(role) {
   const info = getRoleInfo(role);
   const me = getMe();
 
-  roleName.textContent = info.name;
-  roleName.className = info.badgeClass;
-
-  roleTeam.textContent = info.team;
-  roleTeam.className = info.teamClass;
-
   let description = info.description;
 
   if (me && me.role === "executioner") {
@@ -416,7 +414,23 @@ function renderRole(role) {
     }
   }
 
+  // Normal card content
+  roleName.textContent = info.name;
+  roleName.className = info.badgeClass;
+
+  roleTeam.textContent = info.team;
+  roleTeam.className = info.teamClass;
+
   roleDescription.textContent = description;
+
+  // Reveal card content
+  roleNameReveal.textContent = info.name;
+  roleNameReveal.className = info.badgeClass;
+
+  roleTeamReveal.textContent = info.team;
+  roleTeamReveal.className = info.teamClass;
+
+  roleDescriptionReveal.textContent = description;
 
   roleCard.className = "role-card";
   roleCard.classList.add(info.className);
