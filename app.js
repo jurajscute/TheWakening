@@ -95,6 +95,56 @@ const savedName = localStorage.getItem(SAVED_NAME_KEY);
 if (savedName) {
   nameInput.value = savedName;
 }
+const sounds = {
+  ambient: null,
+  effects: {}
+};
+
+function createSound(src) {
+  const audio = new Audio(src);
+  audio.preload = "auto";
+  return audio;
+}
+
+function playSound(name, volume = 1) {
+  const sound = sounds.effects[name];
+  if (!sound) return;
+
+  try {
+    sound.pause();
+    sound.currentTime = 0;
+    sound.volume = volume;
+    sound.play().catch(() => {});
+  } catch (_) {}
+}
+
+function stopAmbient() {
+  if (sounds.ambient) {
+    sounds.ambient.pause();
+    sounds.ambient.currentTime = 0;
+    sounds.ambient = null;
+  }
+}
+
+function playAmbient(src, volume = 0.35) {
+  if (sounds.ambient && sounds.ambient.dataset?.src === src) return;
+
+  stopAmbient();
+
+  const audio = new Audio(src);
+  audio.loop = true;
+  audio.volume = volume;
+  audio.preload = "auto";
+  audio.dataset.src = src;
+  audio.play().catch(() => {});
+
+  sounds.ambient = audio;
+}
+
+sounds.effects.click = createSound("sounds/click.mp3");
+sounds.effects.vote = createSound("sounds/vote.mp3");
+sounds.effects.kill = createSound("sounds/kill.mp3");
+sounds.effects.transition = createSound("sounds/transition.mp3");
 
 function getDefaultRoleSettings() {
   return {
@@ -209,6 +259,7 @@ function showGameUI(roomCode) {
 }
 
 function showMenuUI() {
+  stopAmbient();
   lobbyWarnings.style.display = "none";
   lobbyWarnings.innerHTML = "";
   menu.style.display = "block";
@@ -753,6 +804,7 @@ async function maybeAdvanceAfterRoleReveal() {
 }
 
 function setPhaseAppearance(phase) {
+  playSound("transition", 0.4);
   gameScreen.classList.remove(
     "phase-role-reveal",
     "phase-night-action",
@@ -787,6 +839,7 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "night_action") {
+    playAmbient("sounds/night.mp3", 0.35);
     gameScreen.classList.add("phase-night-action");
     document.body.classList.add("body-night-action");
 
@@ -798,6 +851,7 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "night_result") {
+    playAmbient("sounds/night.mp3", 0.35);
     gameScreen.classList.add("phase-night-result");
     document.body.classList.add("body-night-result");
 
@@ -809,6 +863,7 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "morning") {
+    playAmbient("sounds/voting.mp3", 0.35);
     gameScreen.classList.add("phase-morning");
     document.body.classList.add("body-morning");
 
@@ -820,6 +875,7 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "voting") {
+    playAmbient("sounds/voting.mp3", 0.35);
     gameScreen.classList.add("phase-voting");
     document.body.classList.add("body-voting");
 
@@ -831,6 +887,7 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "vote_result") {
+    playAmbient("sounds/result.mp3", 0.35);
     gameScreen.classList.add("phase-vote-result");
     document.body.classList.add("body-vote-result");
 
@@ -842,6 +899,7 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "game_over") {
+    playAmbient("sounds/result.mp3", 0.35);
     gameScreen.classList.add("phase-game-over");
     document.body.classList.add("body-game-over");
 
@@ -871,21 +929,24 @@ function renderActionPanel() {
     return;
   }
 
-if (currentRoomData.phase === "role_reveal") {
-  if (me.readyForPhase) {
-    actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
+  if (currentRoomData.phase === "role_reveal") {
+    if (me.readyForPhase) {
+      actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
+      return;
+    }
+
+    actionText.textContent = "Read your role carefully. When you are ready, step into the night.";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Continue";
+    btn.className = "player-action-button action-continue";
+    btn.addEventListener("click", () => {
+      playSound("click", 0.5);
+      continueRoleReveal();
+    });
+    actionControls.appendChild(btn);
     return;
   }
-
-  actionText.textContent = "Read your role carefully. When you are ready, step into the night.";
-
-  const btn = document.createElement("button");
-  btn.textContent = "Continue";
-  btn.className = "player-action-button action-continue";
-  btn.addEventListener("click", continueRoleReveal);
-  actionControls.appendChild(btn);
-  return;
-}
 
   if (currentRoomData.phase === "night_action") {
     if (me.readyForPhase) {
@@ -899,43 +960,64 @@ if (currentRoomData.phase === "role_reveal") {
 
       targets.forEach((target) => {
         const btn = document.createElement("button");
-btn.textContent = `Kill ${target.name}`;
-btn.className = "player-action-button action-kill";
-btn.addEventListener("click", () => submitNightAction(target.id));
-actionControls.appendChild(btn);
+        btn.textContent = `Kill ${target.name}`;
+        btn.className = "player-action-button action-kill";
+        btn.addEventListener("click", () => {
+          playSound("click", 0.5);
+          submitNightAction(target.id);
+        });
+        actionControls.appendChild(btn);
       });
-    } else if (me.role === "doctor") {
+
+      return;
+    }
+
+    if (me.role === "doctor") {
       actionText.textContent = "Choose a player to protect tonight.";
       const targets = getAlivePlayers();
 
       targets.forEach((target) => {
         const btn = document.createElement("button");
-btn.textContent = `Protect ${target.name}`;
-btn.className = "player-action-button action-protect";
-btn.addEventListener("click", () => submitDoctorAction(target.id));
-actionControls.appendChild(btn);
+        btn.textContent = `Protect ${target.name}`;
+        btn.className = "player-action-button action-protect";
+        btn.addEventListener("click", () => {
+          playSound("click", 0.5);
+          submitDoctorAction(target.id);
+        });
+        actionControls.appendChild(btn);
       });
-    } else if (me.role === "watchman") {
+
+      return;
+    }
+
+    if (me.role === "watchman") {
       actionText.textContent = "Choose a player to investigate.";
       const targets = getAliveOtherPlayers();
 
       targets.forEach((target) => {
         const btn = document.createElement("button");
-btn.textContent = `Question ${target.name}`;
-btn.className = "player-action-button action-investigate";
-btn.addEventListener("click", () => submitWatchmanAction(target.id));
-actionControls.appendChild(btn);
+        btn.textContent = `Question ${target.name}`;
+        btn.className = "player-action-button action-investigate";
+        btn.addEventListener("click", () => {
+          playSound("click", 0.5);
+          submitWatchmanAction(target.id);
+        });
+        actionControls.appendChild(btn);
       });
-    } else {
-      actionText.textContent = "You have no night action. Click continue when ready.";
 
-      const btn = document.createElement("button");
-btn.textContent = "Continue";
-btn.className = "player-action-button action-continue";
-btn.addEventListener("click", markReadyWithoutAction);
-actionControls.appendChild(btn);
+      return;
     }
 
+    actionText.textContent = "You have no night action. Click continue when ready.";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Continue";
+    btn.className = "player-action-button action-continue";
+    btn.addEventListener("click", () => {
+      playSound("click", 0.5);
+      markReadyWithoutAction();
+    });
+    actionControls.appendChild(btn);
     return;
   }
 
@@ -950,7 +1032,10 @@ actionControls.appendChild(btn);
     const btn = document.createElement("button");
     btn.textContent = "Continue";
     btn.className = "player-action-button action-continue";
-    btn.addEventListener("click", continueNightResult);
+    btn.addEventListener("click", () => {
+      playSound("click", 0.5);
+      continueNightResult();
+    });
     actionControls.appendChild(btn);
     return;
   }
@@ -966,7 +1051,10 @@ actionControls.appendChild(btn);
     const btn = document.createElement("button");
     btn.textContent = "Continue";
     btn.className = "player-action-button action-continue";
-    btn.addEventListener("click", continueMorning);
+    btn.addEventListener("click", () => {
+      playSound("click", 0.5);
+      continueMorning();
+    });
     actionControls.appendChild(btn);
     return;
   }
@@ -983,17 +1071,23 @@ actionControls.appendChild(btn);
 
     targets.forEach((target) => {
       const btn = document.createElement("button");
-btn.textContent = `Vote ${target.name}`;
-btn.className = "player-action-button action-vote";
-btn.addEventListener("click", () => submitVote(target.id));
-actionControls.appendChild(btn);
+      btn.textContent = `Vote ${target.name}`;
+      btn.className = "player-action-button action-vote";
+      btn.addEventListener("click", () => {
+        playSound("click", 0.5);
+        submitVote(target.id);
+      });
+      actionControls.appendChild(btn);
     });
 
     const skipBtn = document.createElement("button");
-skipBtn.textContent = "Skip Vote";
-skipBtn.className = "player-action-button action-skip";
-skipBtn.addEventListener("click", () => submitVote("skip"));
-actionControls.appendChild(skipBtn);
+    skipBtn.textContent = "Skip Vote";
+    skipBtn.className = "player-action-button action-skip";
+    skipBtn.addEventListener("click", () => {
+      playSound("click", 0.5);
+      submitVote("skip");
+    });
+    actionControls.appendChild(skipBtn);
     return;
   }
 
@@ -1007,8 +1101,11 @@ actionControls.appendChild(skipBtn);
 
     const btn = document.createElement("button");
     btn.textContent = "Continue";
-    btn.className = "player-action-button";
-    btn.addEventListener("click", continueVoteResult);
+    btn.className = "player-action-button action-continue";
+    btn.addEventListener("click", () => {
+      playSound("click", 0.5);
+      continueVoteResult();
+    });
     actionControls.appendChild(btn);
     return;
   }
@@ -1683,14 +1780,16 @@ async function maybeResolveNight() {
     const batch = writeBatch(db);
 
     if (killSucceeded) {
-      const target = players.find((player) => player.id === targetId);
-      if (target && target.isAlive) {
-        batch.update(doc(db, "rooms", currentRoomCode, "players", targetId), {
-          isAlive: false,
-          readyForPhase: false
-        });
-      }
-    }
+  playSound("kill", 0.7);
+
+  const target = players.find((player) => player.id === targetId);
+  if (target && target.isAlive) {
+    batch.update(doc(db, "rooms", currentRoomCode, "players", targetId), {
+      isAlive: false,
+      readyForPhase: false
+    });
+  }
+}
 
     players.forEach((player) => {
       let message = "Nothing happened.";
@@ -1828,6 +1927,8 @@ async function submitVote(targetId) {
   try {
     const me = getMe();
     if (!me || !me.isAlive) return;
+
+playSound("vote", 0.6);
 
     await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
       voteTargetId: targetId,
