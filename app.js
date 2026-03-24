@@ -344,50 +344,105 @@ function renderSettingsPanel() {
   settingsPanel.style.display = currentRoomData.status === "lobby" ? "block" : "none";
   settingsContent.innerHTML = "";
 
-  const roleLabels = {
-  murderer: "Murderer",
-  doctor: "Doctor",
-  watchman: "Watchman",
-  executioner: "Executioner",
-  hysteric: "Hysteric"
-};
+  const groupedRoles = [
+    {
+      title: "Murderous",
+      subtitle: "Those who thrive in blood and fear.",
+      roles: ["murderer"]
+    },
+    {
+      title: "Village",
+      subtitle: "Those who resist the darkness.",
+      roles: ["doctor", "watchman"]
+    },
+    {
+      title: "Neutral",
+      subtitle: "Those who follow their own fate.",
+      roles: ["executioner", "hysteric"]
+    }
+  ];
 
-  Object.keys(roleLabels).forEach((roleKey) => {
-    const roleSettings = settings[roleKey] || { enabled: false, max: 0 };
+  const roleMeta = {
+    murderer: {
+      label: "Murderer",
+      flavor: "Kills under cover of night."
+    },
+    doctor: {
+      label: "Doctor",
+      flavor: "Protects one soul from death."
+    },
+    watchman: {
+      label: "Watchman",
+      flavor: "Learns the true identity of another."
+    },
+    executioner: {
+      label: "Executioner",
+      flavor: "Wins if their assigned target is voted out."
+    },
+    hysteric: {
+      label: "Hysteric",
+      flavor: "Wins only if they themselves are voted out."
+    }
+  };
 
-    const row = document.createElement("div");
-    row.className = "role-setting-row";
+  groupedRoles.forEach((group) => {
+    const section = document.createElement("div");
+    section.className = "settings-group";
 
-    row.innerHTML = `
-  <div class="role-setting-title">${roleLabels[roleKey]}</div>
-  <div class="role-setting-controls">
-    <label>
-      <input type="checkbox" data-role="${roleKey}" data-field="enabled" ${roleSettings.enabled ? "checked" : ""} ${isHost ? "" : "disabled"}>
-      Enabled
-    </label>
-  </div>
-  <div class="role-setting-controls">
-    <label>
-      Max:
-      <input type="number" min="0" max="10" value="${roleSettings.max}" data-role="${roleKey}" data-field="max" ${isHost ? "" : "disabled"}>
-    </label>
-  </div>
-  <div class="role-setting-controls">
-    <label>
-      Weight:
-      <input type="number" min="0" max="1000" value="${roleSettings.weight ?? 0}" data-role="${roleKey}" data-field="weight" ${isHost ? "" : "disabled"}>
-    </label>
-  </div>
-`;
+    const header = document.createElement("div");
+    header.className = "settings-group-header";
+    header.innerHTML = `
+      <div class="settings-group-title">${group.title}</div>
+      <div class="settings-group-subtitle">${group.subtitle}</div>
+    `;
+    section.appendChild(header);
 
-    settingsContent.appendChild(row);
+    group.roles.forEach((roleKey) => {
+      const roleSettings = settings[roleKey] || { enabled: false, max: 0, weight: 0 };
+      const meta = roleMeta[roleKey];
+
+      const row = document.createElement("div");
+      row.className = `role-setting-row role-setting-card role-setting-${roleKey}`;
+
+      row.innerHTML = `
+        <div class="role-setting-main">
+          <div class="role-setting-title">${meta.label}</div>
+          <div class="role-setting-flavor">${meta.flavor}</div>
+        </div>
+
+        <div class="role-setting-controls">
+          <label>
+            <input type="checkbox" data-role="${roleKey}" data-field="enabled" ${roleSettings.enabled ? "checked" : ""} ${isHost ? "" : "disabled"}>
+            Enabled
+          </label>
+        </div>
+
+        <div class="role-setting-controls">
+          <label>
+            Max
+            <input type="number" min="0" max="10" value="${roleSettings.max}" data-role="${roleKey}" data-field="max" ${isHost ? "" : "disabled"}>
+          </label>
+        </div>
+
+        <div class="role-setting-controls">
+          <label>
+            Weight
+            <input type="number" min="0" max="1000" value="${roleSettings.weight ?? 0}" data-role="${roleKey}" data-field="weight" ${isHost ? "" : "disabled"}>
+          </label>
+        </div>
+      `;
+
+      section.appendChild(row);
+    });
+
+    settingsContent.appendChild(section);
   });
 
   const note = document.createElement("div");
   note.className = "setting-note";
   note.textContent = isHost
-    ? "Host can change settings before starting the game."
-    : "Only the host can change settings.";
+    ? "Host can change role settings before the match begins."
+    : "Only the host can change role settings.";
   settingsContent.appendChild(note);
 
   if (isHost) {
