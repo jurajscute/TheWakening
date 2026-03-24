@@ -1658,7 +1658,7 @@ input {
 }
 
 .switch input:checked + .switch-slider::before {
-  transform: translateX(72px);
+  transform: translateX(65px);
   background: #fff8ee;
 }
 
