@@ -410,25 +410,50 @@ function renderSettingsPanel() {
           <div class="role-setting-flavor">${meta.flavor}</div>
         </div>
 
-        <div class="role-setting-controls">
-          <label>
-            <input type="checkbox" data-role="${roleKey}" data-field="enabled" ${roleSettings.enabled ? "checked" : ""} ${isHost ? "" : "disabled"}>
-            Enabled
+        <div class="role-setting-control-block">
+          <div class="role-setting-label">Enabled</div>
+          <label class="switch">
+            <input
+              type="checkbox"
+              data-role="${roleKey}"
+              data-field="enabled"
+              ${roleSettings.enabled ? "checked" : ""}
+              ${isHost ? "" : "disabled"}
+            >
+            <span class="switch-slider"></span>
           </label>
         </div>
 
-        <div class="role-setting-controls">
-          <label>
-            Max
-            <input type="number" min="0" max="10" value="${roleSettings.max}" data-role="${roleKey}" data-field="max" ${isHost ? "" : "disabled"}>
-          </label>
+        <div class="role-setting-control-block">
+          <div class="role-setting-label">Max</div>
+          <input
+            class="max-input"
+            type="number"
+            min="0"
+            max="10"
+            value="${roleSettings.max}"
+            data-role="${roleKey}"
+            data-field="max"
+            ${isHost ? "" : "disabled"}
+          >
         </div>
 
-        <div class="role-setting-controls">
-          <label>
-            Weight
-            <input type="number" min="0" max="1000" value="${roleSettings.weight ?? 0}" data-role="${roleKey}" data-field="weight" ${isHost ? "" : "disabled"}>
-          </label>
+        <div class="role-setting-control-block role-setting-weight-block">
+          <div class="role-setting-label">Weight</div>
+          <div class="weight-control-row">
+            <input
+              class="weight-slider"
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value="${roleSettings.weight ?? 0}"
+              data-role="${roleKey}"
+              data-field="weight"
+              ${isHost ? "" : "disabled"}
+            >
+            <span class="weight-value">${roleSettings.weight ?? 0}</span>
+          </div>
         </div>
       `;
 
@@ -448,7 +473,20 @@ function renderSettingsPanel() {
   if (isHost) {
     settingsContent.querySelectorAll("input").forEach((input) => {
       input.addEventListener("change", handleSettingChange);
+      input.addEventListener("input", handleSettingLivePreview);
     });
+  }
+}
+
+function handleSettingLivePreview(event) {
+  const input = event.target;
+
+  if (input.dataset.field === "weight") {
+    const row = input.closest(".role-setting-control-block");
+    const valueText = row?.querySelector(".weight-value");
+    if (valueText) {
+      valueText.textContent = input.value;
+    }
   }
 }
 

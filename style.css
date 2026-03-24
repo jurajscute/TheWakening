@@ -1543,3 +1543,150 @@ input {
   margin-left: auto;
   margin-right: auto;
 }
+
+.role-setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) 120px 90px minmax(180px, 1fr);
+  gap: 14px;
+  align-items: center;
+  margin: 12px 0;
+  padding: 16px;
+  border: 1px solid #3a2a21;
+  border-radius: 14px;
+  background:
+    linear-gradient(to bottom, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.role-setting-control-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.role-setting-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+.max-input {
+  width: 68px !important;
+  min-width: 68px;
+  text-align: center;
+  padding: 10px 8px;
+  margin: 0;
+}
+
+.role-setting-weight-block {
+  align-items: stretch;
+}
+
+.weight-control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.weight-slider {
+  width: 100%;
+  margin: 0;
+  accent-color: #b98b58;
+}
+
+.weight-value {
+  min-width: 32px;
+  text-align: right;
+  color: var(--gold);
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  position: absolute;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid #6a4a39;
+  border-radius: 999px;
+  transition: 0.22s ease;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 3px;
+  background: #f3eadf;
+  border-radius: 50%;
+  transition: 0.22s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.switch input:checked + .switch-slider {
+  background: linear-gradient(to bottom, #b98b58, #7a5735);
+  border-color: #d8b487;
+}
+
+.switch input:checked + .switch-slider::before {
+  transform: translateX(20px);
+  background: #fff7ea;
+}
+
+.switch input:disabled + .switch-slider {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.role-setting-card label {
+  background: none;
+  border: none;
+  padding: 0;
+  min-height: auto;
+}
+
+@media (max-width: 860px) {
+  .role-setting-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .role-setting-main {
+    text-align: left;
+  }
+
+  .role-setting-control-block {
+    align-items: stretch;
+  }
+
+  .max-input {
+    width: 100% !important;
+  }
+
+  .weight-control-row {
+    width: 100%;
+  }
+}
