@@ -699,7 +699,7 @@ if (currentRoomData.phase === "role_reveal") {
 
   const btn = document.createElement("button");
   btn.textContent = "Continue";
-  btn.className = "player-action-button";
+  btn.className = "player-action-button action-continue";
   btn.addEventListener("click", continueRoleReveal);
   actionControls.appendChild(btn);
   return;
@@ -717,10 +717,10 @@ if (currentRoomData.phase === "role_reveal") {
 
       targets.forEach((target) => {
         const btn = document.createElement("button");
-        btn.textContent = target.name;
-        btn.className = "player-action-button";
-        btn.addEventListener("click", () => submitNightAction(target.id));
-        actionControls.appendChild(btn);
+btn.textContent = `Kill ${target.name}`;
+btn.className = "player-action-button action-kill";
+btn.addEventListener("click", () => submitNightAction(target.id));
+actionControls.appendChild(btn);
       });
     } else if (me.role === "doctor") {
       actionText.textContent = "Choose a player to protect tonight.";
@@ -728,10 +728,10 @@ if (currentRoomData.phase === "role_reveal") {
 
       targets.forEach((target) => {
         const btn = document.createElement("button");
-        btn.textContent = `Protect: ${target.name}`;
-        btn.className = "player-action-button";
-        btn.addEventListener("click", () => submitDoctorAction(target.id));
-        actionControls.appendChild(btn);
+btn.textContent = `Protect ${target.name}`;
+btn.className = "player-action-button action-protect";
+btn.addEventListener("click", () => submitDoctorAction(target.id));
+actionControls.appendChild(btn);
       });
     } else if (me.role === "watchman") {
       actionText.textContent = "Choose a player to investigate.";
@@ -739,19 +739,19 @@ if (currentRoomData.phase === "role_reveal") {
 
       targets.forEach((target) => {
         const btn = document.createElement("button");
-        btn.textContent = `Investigate: ${target.name}`;
-        btn.className = "player-action-button";
-        btn.addEventListener("click", () => submitWatchmanAction(target.id));
-        actionControls.appendChild(btn);
+btn.textContent = `Question ${target.name}`;
+btn.className = "player-action-button action-investigate";
+btn.addEventListener("click", () => submitWatchmanAction(target.id));
+actionControls.appendChild(btn);
       });
     } else {
       actionText.textContent = "You have no night action. Click continue when ready.";
 
       const btn = document.createElement("button");
-      btn.textContent = "Continue";
-      btn.className = "player-action-button";
-      btn.addEventListener("click", markReadyWithoutAction);
-      actionControls.appendChild(btn);
+btn.textContent = "Continue";
+btn.className = "player-action-button action-continue";
+btn.addEventListener("click", markReadyWithoutAction);
+actionControls.appendChild(btn);
     }
 
     return;
@@ -767,7 +767,7 @@ if (currentRoomData.phase === "role_reveal") {
 
     const btn = document.createElement("button");
     btn.textContent = "Continue";
-    btn.className = "player-action-button";
+    btn.className = "player-action-button action-continue";
     btn.addEventListener("click", continueNightResult);
     actionControls.appendChild(btn);
     return;
@@ -783,7 +783,7 @@ if (currentRoomData.phase === "role_reveal") {
 
     const btn = document.createElement("button");
     btn.textContent = "Continue";
-    btn.className = "player-action-button";
+    btn.className = "player-action-button action-continue";
     btn.addEventListener("click", continueMorning);
     actionControls.appendChild(btn);
     return;
@@ -801,17 +801,17 @@ if (currentRoomData.phase === "role_reveal") {
 
     targets.forEach((target) => {
       const btn = document.createElement("button");
-      btn.textContent = `Vote: ${target.name}`;
-      btn.className = "player-action-button";
-      btn.addEventListener("click", () => submitVote(target.id));
-      actionControls.appendChild(btn);
+btn.textContent = `Vote ${target.name}`;
+btn.className = "player-action-button action-vote";
+btn.addEventListener("click", () => submitVote(target.id));
+actionControls.appendChild(btn);
     });
 
     const skipBtn = document.createElement("button");
-    skipBtn.textContent = "Skip Vote";
-    skipBtn.className = "player-action-button";
-    skipBtn.addEventListener("click", () => submitVote("skip"));
-    actionControls.appendChild(skipBtn);
+skipBtn.textContent = "Skip Vote";
+skipBtn.className = "player-action-button action-skip";
+skipBtn.addEventListener("click", () => submitVote("skip"));
+actionControls.appendChild(skipBtn);
     return;
   }
 

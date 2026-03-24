@@ -936,3 +936,169 @@ input {
   margin-top: 18px;
   min-width: 220px;
 }
+
+/* Base action button variants */
+.action-kill {
+  background: linear-gradient(to bottom, #8f1717, #5f0d0d);
+  border-color: #c04b4b;
+  box-shadow: 0 10px 24px rgba(120, 15, 15, 0.28);
+}
+
+.action-kill:hover {
+  background: linear-gradient(to bottom, #b12121, #741111);
+  box-shadow: 0 14px 32px rgba(150, 20, 20, 0.34);
+}
+
+.action-protect {
+  background: linear-gradient(to bottom, #3f7d52, #2d5a3b);
+  border-color: #76b388;
+  box-shadow: 0 10px 24px rgba(45, 100, 60, 0.24);
+}
+
+.action-protect:hover {
+  background: linear-gradient(to bottom, #4e9764, #376f48);
+  box-shadow: 0 14px 32px rgba(60, 125, 80, 0.3);
+}
+
+.action-investigate {
+  background: linear-gradient(to bottom, #7a5c3a, #5c4329);
+  border-color: #c3a175;
+  box-shadow: 0 10px 24px rgba(110, 80, 45, 0.24);
+}
+
+.action-investigate:hover {
+  background: linear-gradient(to bottom, #94704a, #6f5233);
+  box-shadow: 0 14px 32px rgba(135, 95, 55, 0.3);
+}
+
+.action-vote {
+  background: linear-gradient(to bottom, #8a5a18, #654112);
+  border-color: #d2a25f;
+  box-shadow: 0 10px 24px rgba(135, 90, 20, 0.24);
+}
+
+.action-vote:hover {
+  background: linear-gradient(to bottom, #a76d20, #764d16);
+  box-shadow: 0 14px 32px rgba(160, 105, 25, 0.3);
+}
+
+.action-skip {
+  background: linear-gradient(to bottom, #5c4d46, #413632);
+  border-color: #9c877d;
+  box-shadow: 0 10px 24px rgba(70, 55, 50, 0.2);
+}
+
+.action-skip:hover {
+  background: linear-gradient(to bottom, #72615a, #50443f);
+  box-shadow: 0 14px 32px rgba(95, 75, 70, 0.26);
+}
+
+.action-continue {
+  background: linear-gradient(to bottom, #6f5a46, #4d3f32);
+  border-color: #b79876;
+  box-shadow: 0 10px 24px rgba(90, 70, 50, 0.22);
+}
+
+.action-continue:hover {
+  background: linear-gradient(to bottom, #866b53, #5e4c3c);
+  box-shadow: 0 14px 32px rgba(110, 85, 60, 0.28);
+}
+
+/* Stronger glow by intent */
+.action-kill::before,
+.action-protect::before,
+.action-investigate::before,
+.action-vote::before,
+.action-skip::before,
+.action-continue::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.action-kill::before {
+  background: radial-gradient(circle, rgba(180, 40, 40, 0.16), transparent 60%);
+}
+
+.action-protect::before {
+  background: radial-gradient(circle, rgba(100, 180, 120, 0.16), transparent 60%);
+}
+
+.action-investigate::before {
+  background: radial-gradient(circle, rgba(190, 150, 95, 0.16), transparent 60%);
+}
+
+.action-vote::before {
+  background: radial-gradient(circle, rgba(210, 150, 70, 0.14), transparent 60%);
+}
+
+.action-skip::before {
+  background: radial-gradient(circle, rgba(170, 150, 140, 0.14), transparent 60%);
+}
+
+.action-continue::before {
+  background: radial-gradient(circle, rgba(200, 170, 130, 0.14), transparent 60%);
+}
+
+.action-kill:hover::before,
+.action-protect:hover::before,
+.action-investigate:hover::before,
+.action-vote:hover::before,
+.action-skip:hover::before,
+.action-continue:hover::before {
+  opacity: 1;
+}
+
+/* Role card accents by action type */
+#game.phase-night-action .role-murderer .badge-murderer {
+  box-shadow: 0 0 22px rgba(180, 40, 40, 0.16);
+}
+
+#game.phase-night-action .role-doctor .badge-doctor {
+  box-shadow: 0 0 22px rgba(100, 180, 120, 0.16);
+}
+
+#game.phase-night-action .role-watchman .badge-watchman {
+  box-shadow: 0 0 22px rgba(190, 150, 95, 0.16);
+}
+
+#game.phase-night-action #messagePanel {
+  border-color: #4a2a2a;
+}
+
+#game.phase-night-result #messagePanel {
+  border-color: #4b3960;
+}
+
+#game.phase-morning #messagePanel {
+  border-color: #6c5843;
+}
+
+#game.phase-voting #messagePanel {
+  border-color: #7b5524;
+}
+
+#game.phase-vote-result #messagePanel {
+  border-color: #6f3434;
+}
+
+#actionPanel {
+  position: relative;
+  overflow: hidden;
+}
+
+#actionPanel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), transparent 45%);
+  pointer-events: none;
+}
+
+#game.phase-night-action #roleName,
+#game.phase-role-reveal #roleName {
+  transform: scale(1.03);
+}
