@@ -39,6 +39,7 @@ let currentUnsubscribePlayers = null;
 let currentUnsubscribeRoom = null;
 let currentPlayers = [];
 let currentRoomData = null;
+let hasFlippedRoleReveal = false;
 
 const menu = document.getElementById("menu");
 const roomScreen = document.getElementById("room");
@@ -88,6 +89,10 @@ const joinBtn = document.getElementById("joinBtn");
 const startBtn = document.getElementById("startBtn");
 const leaveBtn = document.getElementById("leaveBtn");
 const restartBtn = document.getElementById("restartBtn");
+
+const roleRevealWrap = document.getElementById("roleRevealWrap");
+const roleRevealCard = document.getElementById("roleRevealCard");
+const roleCardNormalContent = document.getElementById("roleCardNormalContent");
 
 const lobbyWarnings = document.getElementById("lobbyWarnings");
 
@@ -260,6 +265,7 @@ function showGameUI(roomCode) {
 
 function showMenuUI() {
   stopAmbient();
+  hasFlippedRoleReveal = false;
   lobbyWarnings.style.display = "none";
   lobbyWarnings.innerHTML = "";
   menu.style.display = "block";
@@ -317,6 +323,7 @@ function cleanupListeners() {
 }
 
 function resetLocalState() {
+  hasFlippedRoleReveal = false;
   currentRoomCode = null;
   currentPlayerId = null;
   currentPlayerName = null;
@@ -377,6 +384,25 @@ function renderAlivePlayers(players) {
   });
 }
 
+function setRoleRevealMode(isRevealPhase) {
+  if (isRevealPhase) {
+    roleRevealWrap.style.display = "block";
+    roleCardNormalContent.style.display = "none";
+  } else {
+    roleRevealWrap.style.display = "none";
+    roleCardNormalContent.style.display = "none";
+    roleRevealCard.classList.remove("flipped");
+    hasFlippedRoleReveal = false;
+  }
+}
+
+function flipRoleRevealCard() {
+  if (hasFlippedRoleReveal) return;
+  hasFlippedRoleReveal = true;
+  roleRevealCard.classList.add("flipped");
+  renderActionPanel();
+}
+
 function renderRole(role) {
   const info = getRoleInfo(role);
   const me = getMe();
@@ -402,6 +428,8 @@ function renderRole(role) {
 
   roleCard.className = "role-card";
   roleCard.classList.add(info.className);
+
+  setRoleRevealMode(currentRoomData?.phase === "role_reveal");
 }
 
 function renderPublicMessage() {
@@ -828,6 +856,9 @@ function setPhaseAppearance(phase) {
   );
 
   if (phase === "role_reveal") {
+    hasFlippedRoleReveal = false;
+    roleRevealCard.classList.remove("flipped");
+
     gameScreen.classList.add("role-reveal-mode", "phase-role-reveal");
     document.body.classList.add("body-role-reveal");
 
@@ -930,23 +961,29 @@ function renderActionPanel() {
   }
 
   if (currentRoomData.phase === "role_reveal") {
-    if (me.readyForPhase) {
-      actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
-      return;
-    }
-
-    actionText.textContent = "Read your role carefully. When you are ready, step into the night.";
-
-    const btn = document.createElement("button");
-    btn.textContent = "Continue";
-    btn.className = "player-action-button action-continue";
-    btn.addEventListener("click", () => {
-      playSound("click", 0.5);
-      continueRoleReveal();
-    });
-    actionControls.appendChild(btn);
+  if (!hasFlippedRoleReveal) {
+    actionText.textContent = "Click the card to reveal your role.";
+    actionControls.innerHTML = "";
     return;
   }
+
+  if (me.readyForPhase) {
+    actionText.innerHTML = '<span class="ready-text">You are ready. Waiting for other players...</span>';
+    return;
+  }
+
+  actionText.textContent = "Read your role carefully. When you are ready, step into the night.";
+
+  const btn = document.createElement("button");
+  btn.textContent = "Continue";
+  btn.className = "player-action-button action-continue";
+  btn.addEventListener("click", () => {
+    playSound("click", 0.5);
+    continueRoleReveal();
+  });
+  actionControls.appendChild(btn);
+  return;
+}
 
   if (currentRoomData.phase === "night_action") {
     if (me.readyForPhase) {
@@ -1780,8 +1817,8 @@ async function maybeResolveNight() {
     const batch = writeBatch(db);
 
     if (killSucceeded) {
-  playSound("kill", 0.7);
-
+  playSound("kill", 0.9);
+await new Promise(r => setTimeout(r, 300));
   const target = players.find((player) => player.id === targetId);
   if (target && target.isAlive) {
     batch.update(doc(db, "rooms", currentRoomCode, "players", targetId), {
@@ -1928,7 +1965,7 @@ async function submitVote(targetId) {
     const me = getMe();
     if (!me || !me.isAlive) return;
 
-playSound("vote", 0.6);
+playSound("vote", 0.7);
 
     await updateDoc(doc(db, "rooms", currentRoomCode, "players", currentPlayerId), {
       voteTargetId: targetId,
@@ -1941,6 +1978,24 @@ playSound("vote", 0.6);
     alert("Vote submit failed: " + error.message);
   }
 }
+
+function stopAmbient() {
+  if (!sounds.ambient) return;
+
+  const audio = sounds.ambient;
+
+  const fade = setInterval(() => {
+    if (audio.volume > 0.05) {
+      audio.volume -= 0.05;
+    } else {
+      audio.pause();
+      audio.currentTime = 0;
+      sounds.ambient = null;
+      clearInterval(fade);
+    }
+  }, 50);
+}
+
 
 function getExecutionerWinners(players, eliminatedPlayerId, cause) {
   if (cause !== "vote") return [];
@@ -2249,6 +2304,12 @@ async function leaveRoom(showMessage = true) {
     alert("You left the room.");
   }
 }
+
+roleRevealCard.addEventListener("click", () => {
+  if (currentRoomData?.phase !== "role_reveal") return;
+  playSound("click", 0.45);
+  flipRoleRevealCard();
+});
 nameInput.addEventListener("input", () => {
   localStorage.setItem(SAVED_NAME_KEY, nameInput.value.trim());
 });
