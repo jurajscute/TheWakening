@@ -396,8 +396,17 @@ function setRoleRevealMode(isRevealPhase) {
 
 function flipRoleRevealCard() {
   if (hasFlippedRoleReveal) return;
+
   hasFlippedRoleReveal = true;
   roleRevealCard.classList.add("flipped");
+
+  setTimeout(() => {
+    roleRevealCard.classList.add("reveal-glow");
+    setTimeout(() => {
+      roleRevealCard.classList.remove("reveal-glow");
+    }, 700);
+  }, 420);
+
   renderActionPanel();
 }
 
@@ -2315,7 +2324,9 @@ async function leaveRoom(showMessage = true) {
 
 roleRevealCard.addEventListener("click", () => {
   if (currentRoomData?.phase !== "role_reveal") return;
-  playSound("click", 0.45);
+  if (hasFlippedRoleReveal) return;
+
+  playSound("click", 0.35);
   flipRoleRevealCard();
 });
 nameInput.addEventListener("input", () => {

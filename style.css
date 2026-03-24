@@ -2083,23 +2083,24 @@ body.body-game-over {
   display: flex;
   justify-content: center;
   align-items: center;
-  perspective: 1400px;
-  min-height: 340px;
+  perspective: 1600px;
+  min-height: 360px;
   width: 100%;
   overflow: visible;
 }
 
 .role-reveal-card {
   position: relative;
-  width: min(520px, 90vw);
-  height: 320px;
+  width: min(560px, 90vw);
+  height: 340px;
   transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: transform 0.95s cubic-bezier(0.22, 0.72, 0.18, 1);
   cursor: pointer;
+  will-change: transform;
 }
 
 .role-reveal-card.flipped {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) scale(1.01);
 }
 
 .role-reveal-face {
@@ -2107,60 +2108,99 @@ body.body-game-over {
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border-radius: 18px;
+  border-radius: 22px;
   border: 2px solid var(--border-strong);
-  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255,255,255,0.03);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 28px;
+  padding: 30px;
   overflow: hidden;
 }
 
+/* Front of the card */
 .role-reveal-front {
   background:
-    radial-gradient(circle at top, rgba(255,204,136,0.08), transparent 35%),
-    linear-gradient(to bottom, #140b0b, #0b0505);
+    radial-gradient(circle at top, rgba(255,204,136,0.10), transparent 34%),
+    linear-gradient(to bottom, #140b0b, #0a0404);
 }
 
 .role-reveal-front::before {
   content: "";
   position: absolute;
-  inset: 10px;
-  border: 1px solid rgba(255, 204, 136, 0.12);
-  border-radius: 14px;
+  inset: 12px;
+  border: 1px solid rgba(255, 204, 136, 0.14);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.role-reveal-front::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.05), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(255, 204, 136, 0.05), transparent 28%);
   pointer-events: none;
 }
 
 .role-reveal-front-title {
-  font-size: clamp(30px, 4vw, 44px);
+  font-size: clamp(30px, 4vw, 48px);
   color: var(--gold);
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  margin-bottom: 12px;
-  text-shadow: 0 0 16px rgba(255, 204, 136, 0.08);
+  margin-bottom: 14px;
+  text-shadow: 0 0 18px rgba(255, 204, 136, 0.12);
 }
 
 .role-reveal-front-subtitle {
   color: var(--muted);
   font-style: italic;
   text-align: center;
+  max-width: 28ch;
+  line-height: 1.5;
 }
 
+.role-reveal-sigil {
+  margin-top: 18px;
+  font-size: 38px;
+  color: rgba(255, 204, 136, 0.22);
+  letter-spacing: 4px;
+  user-select: none;
+}
+
+/* Back of the card */
 .role-reveal-back {
   background:
     radial-gradient(circle at top right, rgba(255,255,255,0.06), transparent 30%),
-    linear-gradient(to bottom, rgba(0,0,0,0.28), rgba(255,255,255,0.02));
+    linear-gradient(to bottom, rgba(0,0,0,0.30), rgba(255,255,255,0.02));
   transform: rotateY(180deg);
 }
 
+/* Hover before reveal */
+#game.role-reveal-mode .role-reveal-card:not(.flipped) {
+  animation: revealFloat 2.8s ease-in-out infinite;
+}
+
+#game.role-reveal-mode .role-reveal-card:not(.flipped):hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+/* Keep flipped card stable */
+#game.role-reveal-mode .role-reveal-card.flipped:hover {
+  transform: rotateY(180deg) scale(1.01);
+}
+
+/* Make the outer role card disappear during reveal mode */
 #game.role-reveal-mode .role-card {
   background: transparent;
   border: none;
   box-shadow: none;
   padding: 0;
-  max-width: 620px;
+  max-width: 640px;
   overflow: visible;
 }
 
@@ -2169,12 +2209,34 @@ body.body-game-over {
   display: none;
 }
 
-#game.role-reveal-mode .role-reveal-card:not(.flipped):hover {
-  transform: translateY(-2px) scale(1.01);
+/* Reveal pulse */
+.role-reveal-card.reveal-glow .role-reveal-back {
+  animation: revealPulse 0.7s ease;
 }
 
-#game.role-reveal-mode .role-reveal-card.flipped:hover {
-  transform: rotateY(180deg);
+/* Animations */
+@keyframes revealFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes revealPulse {
+  0% {
+    box-shadow:
+      0 0 0 rgba(255, 204, 136, 0),
+      0 20px 50px rgba(0,0,0,0.38);
+  }
+  35% {
+    box-shadow:
+      0 0 34px rgba(255, 204, 136, 0.22),
+      0 20px 50px rgba(0,0,0,0.38);
+  }
+  100% {
+    box-shadow:
+      0 0 0 rgba(255, 204, 136, 0),
+      0 20px 50px rgba(0,0,0,0.38);
+  }
 }
 
 .role-card.role-murderer .role-reveal-back {
@@ -2241,4 +2303,47 @@ body.body-game-over {
 #menu .players-panel,
 #room .players-panel {
   display: none;
+}
+
+.role-reveal-back h3 {
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+#roleNameReveal {
+  margin: 0 0 12px;
+}
+
+#roleTeamReveal {
+  margin: 0 0 16px;
+}
+
+#roleDescriptionReveal {
+  max-width: 34ch;
+  margin: 0 auto;
+  line-height: 1.65;
+}
+
+.role-card.role-murderer .role-reveal-front {
+  box-shadow: 0 0 26px rgba(180, 40, 40, 0.08);
+}
+
+.role-card.role-doctor .role-reveal-front {
+  box-shadow: 0 0 26px rgba(100, 180, 120, 0.06);
+}
+
+.role-card.role-watchman .role-reveal-front {
+  box-shadow: 0 0 26px rgba(190, 150, 95, 0.06);
+}
+
+.role-card.role-executioner .role-reveal-front {
+  box-shadow: 0 0 26px rgba(170, 110, 160, 0.06);
+}
+
+.role-card.role-hysteric .role-reveal-front {
+  box-shadow: 0 0 26px rgba(220, 90, 160, 0.08);
+}
+
+.role-card.role-villager .role-reveal-front {
+  box-shadow: 0 0 22px rgba(255, 204, 136, 0.04);
 }
