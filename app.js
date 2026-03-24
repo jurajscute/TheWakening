@@ -505,8 +505,8 @@ async function handleSettingChange(event) {
     const nextSettings = JSON.parse(JSON.stringify(existing));
 
     if (!nextSettings[role]) {
-  nextSettings[role] = { enabled: false, max: 0, weight: 0 };
-}
+      nextSettings[role] = { enabled: false, max: 0, weight: 0 };
+    }
 
     if (field === "enabled") {
       nextSettings[role].enabled = input.checked;
@@ -521,28 +521,42 @@ async function handleSettingChange(event) {
     }
 
     if (field === "weight") {
-  let value = parseInt(input.value, 10);
-  if (Number.isNaN(value) || value < 0) value = 0;
-  input.value = value;
-  nextSettings[role].weight = value;
-}
+      let value = parseInt(input.value, 10);
+      if (Number.isNaN(value) || value < 0) value = 0;
+      input.value = value;
+      nextSettings[role].weight = value;
+    }
 
     if (role === "murderer") {
       nextSettings.murderer.enabled = true;
       if (nextSettings.murderer.max < 1) {
         nextSettings.murderer.max = 1;
       }
+      if (nextSettings.murderer.weight == null) {
+        nextSettings.murderer.weight = 100;
+      }
     }
 
-    if (nextSettings.murderer.weight == null) {
-  nextSettings.murderer.weight = 100;
-}
+    const saveSettings = async () => {
+      await updateDoc(doc(db, "rooms", currentRoomCode), {
+        settings: {
+          roles: nextSettings
+        }
+      });
+    };
 
-    await updateDoc(doc(db, "rooms", currentRoomCode), {
-      settings: {
-        roles: nextSettings
-      }
-    });
+    // Let the switch animation finish before rerendering from Firestore
+    if (field === "enabled") {
+      setTimeout(() => {
+        saveSettings().catch((error) => {
+          console.error("Setting update failed:", error);
+          alert("Setting update failed: " + error.message);
+        });
+      }, 180);
+      return;
+    }
+
+    await saveSettings();
   } catch (error) {
     console.error("Setting update failed:", error);
     alert("Setting update failed: " + error.message);
