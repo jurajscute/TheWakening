@@ -1212,8 +1212,12 @@ function renderActionPanel() {
       actionText.innerHTML = '<span class="ready-text">Waiting for others...</span>';
       return;
     }
+    const resultMessage = me.nightResultMessage;
 
-    actionText.textContent = "Light slowly starts to shimmer...";
+actionText.textContent =
+  resultMessage && resultMessage.trim() !== ""
+    ? resultMessage
+    : "Light slowly starts to shimmer...";
 
     const btn = document.createElement("button");
     btn.textContent = "Continue";
@@ -1421,6 +1425,7 @@ async function createRoom() {
       investigateTargetId: null,
       voteTargetId: null,
       executionerTargetId: null,
+      nightResultMessage: ""
     });
 
     currentRoomCode = roomCode;
@@ -1491,6 +1496,7 @@ if (existingNames.includes(name.toLowerCase())) {
       investigateTargetId: null,
       voteTargetId: null,
       executionerTargetId: null,
+      nightResultMessage: ""
     });
 
     currentRoomCode = roomCode;
@@ -1751,6 +1757,7 @@ if (validationErrors.length > 0) {
         investigateTargetId: null,
         voteTargetId: null,
         executionerTargetId: executionerTargets[assignment.id] ?? null,
+        nightResultMessage: ""
         isAlive: true
       });
     });
@@ -1799,6 +1806,7 @@ async function returnGameToLobby() {
         investigateTargetId: null,
         voteTargetId: null,
         executionerTargetId: null
+        nightResultMessage: ""
       });
     });
 
@@ -1846,6 +1854,7 @@ async function restartGame() {
     investigateTargetId: null,
     voteTargetId: null,
     executionerTargetId: null
+    nightResultMessage: ""
   });
 });
 
@@ -2018,6 +2027,7 @@ async function maybeResolveNight() {
 
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
         readyForPhase: false
+        nightResultMessage: message
       });
     });
 
@@ -2349,6 +2359,7 @@ async function maybeAdvanceAfterVoteResult() {
         protectTargetId: null,
         investigateTargetId: null,
         voteTargetId: null,
+        nightResultMessage: ""
       });
     });
 
