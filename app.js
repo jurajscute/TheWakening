@@ -1262,7 +1262,6 @@ async function maybeAdvanceAfterNightResult() {
     const killSucceeded = !!targetId && !killBlocked;
 
     const pendingKillId = roomData.pendingKillTargetId;
-const killBlocked = roomData.killBlocked;
 
 let morningMessage = "No one died tonight.";
 
