@@ -2002,32 +2002,17 @@ async function maybeResolveNight() {
     const investigatedId = watchman ? watchman.investigateTargetId : null;
 
     const killBlocked = !!targetId && !!protectedId && targetId === protectedId;
-    const killSucceeded = !!targetId && !killBlocked;
+    const willDieTonight = !!targetId && !killBlocked;
 
     const batch = writeBatch(db);
 
-<<<<<<< HEAD
-const willDieTonight = targetId && !killBlocked;
-
-    batch.update(roomRef, {
-  phase: "night_result",
-  pendingKillTargetId: killSucceeded ? targetId : null,
-  killBlocked: killBlocked
-});
-
-=======
->>>>>>> 22dec5f9028f7ba89f5fc395faad13323d51385a
     players.forEach((player) => {
-  let message = "Nothing happened.";
+      let message = "Nothing happened.";
+      const isTarget = player.id === targetId;
 
-  const isTarget = player.id === targetId;
-
-  // ☠️ Death warning takes priority
-  if (isTarget && willDieTonight) {
-    message = getRandomFromArray(DEATH_WARNING_MESSAGES);
-  } else {
-
-      if (player.role === "murderer") {
+      if (isTarget && willDieTonight) {
+        message = getRandomFromArray(DEATH_WARNING_MESSAGES);
+      } else if (player.role === "murderer") {
         if (!targetId) {
           message = "Your kill failed.";
         } else if (killBlocked) {
@@ -2053,10 +2038,12 @@ const willDieTonight = targetId && !killBlocked;
           const target = players.find((p) => p.id === investigatedId);
           if (target) {
             message = `${target.name} is a ${target.role}.`;
+          } else {
+            message = "You found nothing of use.";
           }
         }
       } else if (player.role === "hysteric") {
-        message = "You crave the rope, the fire, the fall. You must be voted out.";
+        message = getRandomFromArray(ROLE_FLAVOR_MESSAGES.hysteric);
       } else if (player.role === "executioner") {
         const target = players.find((p) => p.id === player.executionerTargetId);
         if (target) {
@@ -2065,9 +2052,9 @@ const willDieTonight = targetId && !killBlocked;
           message = "You do not have a valid target.";
         }
       } else {
-  const flavorPool = ROLE_FLAVOR_MESSAGES[player.role] || ROLE_FLAVOR_MESSAGES.villager;
-  message = getRandomFromArray(flavorPool);
-}
+        const flavorPool = ROLE_FLAVOR_MESSAGES[player.role] || ROLE_FLAVOR_MESSAGES.villager;
+        message = getRandomFromArray(flavorPool);
+      }
 
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
         privateMessage: message,
@@ -2075,8 +2062,6 @@ const willDieTonight = targetId && !killBlocked;
       });
     });
 
-    }
-    
     batch.update(roomRef, {
       phase: "night_result",
       pendingKillTargetId: targetId || null,
@@ -2089,6 +2074,7 @@ const willDieTonight = targetId && !killBlocked;
     alert("Night resolve failed: " + error.message);
   }
 }
+
 
 async function continueMorning() {
   try {
