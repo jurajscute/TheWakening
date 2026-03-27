@@ -113,6 +113,127 @@ const sounds = {
   effects: {}
 };
 
+const ROLE_FLAVOR_MESSAGES = {
+  villager: [
+    "All your friends tell you that you smell, that can't be right... can it?",
+"The thought of living has became rather sad.",
+"You're so happy to have a wonderful day tomorrow!",
+"Being called a genius isn't something very common, especially not for you.",
+"Why is this matress so hard!?",
+"You're scared there might be bed bugs in your bed.",
+"You dreamed about cake, maybe life IS worth living...",
+"You dream about a big carrot.",
+"'Maybe evil isn't so bad?' you think to yourself...",
+"Seeing a person die isn't something you really want.",
+"This is the best sleep you've ever had.",
+"Being in this village, you learned: 'Life isn't fair.'.",
+"The night is suspiciously quiet...",
+"You had a dream about a giat loaf of bread.",
+"You woke up and noticed you drooled.",
+"You wonder why everyone keeps calling you dumb :(",
+"There's only so many people the evil can get, you're safe right?",
+"Being a villager isn't easy, but atleast... nevermind, it's the worst.",
+"Good thing you are such a deep sleeper, you didn't hear any of the screams.",
+"You had a dream about the juciest apple ever.",
+"Dreaming is for losers, you just see darkness.",
+"Maybe one day you could be a doctor? nah."
+  ],
+  murderer: [
+    "Kill them, kill them all.",
+    "Let's finish this quickly, yeah?",
+    "Blood, you need it.",
+    "This is amazing, hopefully next time is just as fun!",
+    "Man, this village sucks.",
+    "You're a little too familiar with death, don't ya think?",
+    "Are you sure no one saw you?",
+    "Kill, kill and kill!",
+    "Eat, sleep, kill, repeat.",
+    "Maybe you're not the only crazy person in this village!",
+    "You had a dream about being the most famous serial killer, you wish!",
+    "A town full of people to kill? Maybe life IS worth living!",
+    "There's a stain of blood on your shirt. Whoops!",
+    "Rainy night, your favourite!",
+    "It's not your fault they made you do this.",
+    "You have a weird feeling somebody saw you... nah, it'll be okay.",
+    "Any particular reason you chose them?",
+    "Why them, huh?",
+    "You're not better than anyone else, you know?"
+  ],
+  doctor: [
+"You know, being a doctor is pretty boring when nothing happens.",
+"You put a needle in your patient and they aren't waking up... oh-oh.",
+"The feeling of saving someones life is amazing... but how would you know?",
+"You just gave your patient some pills and left. #boringdayatwork",
+"Phew, having to prevent a murder would've been rough.",
+"Something looks off about your patients glass of water... oh well.",
+"Besides the fact your patient keeps repeating some weird phrases, all is well.",
+"You fell asleep at your patients house, the wake up was kinda awkward.",
+"Your patient didn't need any help tonight.",
+"Nothing major with the patient tonight.",
+"All seems in order with your patient.",
+"Other than the weird rash, your patient seems fine.",
+"Your patient seems to have an allergy to peanuts, other than that they're fine.",
+"You failed to protect the right person, guilt consumes you.",
+"While catering to your patient you hear a scream somewhere else..."
+],
+  watchman: [
+    "You observe the shadows closely.",
+    "Nothing escapes your watchful gaze.",
+    "The night reveals subtle truths."
+  ],
+  executioner: [
+"Why does this town even need an executioner?",
+"You are genuinely going to throw up if you see them again.",
+"Being an executioner gets people staring, a LOT.",
+"What's the point of being an executioner if you can't even execute anyone!?",
+"Your target is the worst person ever, get them voted off!",
+"Hopefully your target is hysteric or something...",
+"Okay, next morning you're killing them no matter what!",
+"The hate towards your target grows stronger.",
+"You want them out, now.",
+"If it was legal, you'd kill your target yourself.",
+"The thought of having to spend even one more day with your target drives you mad.",
+"Get. Them. Out.",
+"You dream of a beautiful world where your target is dead.",
+"Why does everyone like them so much!?"
+],
+  hysteric: [
+"You crave attention… any attention.",
+"The silence is unbearable.",
+"You long for the spotlight.",
+"Is something funny?",
+"This whole town is a tough crowd.",
+"You're still laughing at your joke from yesterday.",
+"The rest of the town must think you're crazy huh?",
+"Sleeping is soooooo boring!",
+"Being funny comes with it's disadvantages too, you know?",
+"Would just acting like a villager get you voted out? I feel like they're dumb enough.",
+"Sometimes jokes aren't funny, not in your case though.",
+"You're thinking of a way to trick the town.",
+"You try to sleep, but you're too excited!",
+"You can't stop giggling to yourself.",
+"Everyone seems to think you're crazy... prove them right.",
+"No one understands the struggle of being insane.",
+"You've been laughing at your joke for the last 5 hours."
+  ],
+};
+
+const DEATH_WARNING_MESSAGES = [
+  "You feel a sudden chill run down your spine...",
+  "Something is very, very wrong.",
+  "You sense that death is near.",
+  "A shadow looms over you in the dark.",
+  "Your instincts scream danger… but it's too late.",
+  "'It's SO over!' you think to yourself.",
+  "You feel something sharp and pointy in your neck. Could it be...?",
+  "How mad would you be if you died next morning?"
+];
+
+function getRandomFromArray(arr) {
+  if (!arr || arr.length === 0) return "";
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function createSound(src) {
   const audio = new Audio(src);
   audio.preload = "auto";
@@ -1885,8 +2006,26 @@ async function maybeResolveNight() {
 
     const batch = writeBatch(db);
 
+<<<<<<< HEAD
+const willDieTonight = targetId && !killBlocked;
+
+    batch.update(roomRef, {
+  phase: "night_result",
+  pendingKillTargetId: killSucceeded ? targetId : null,
+  killBlocked: killBlocked
+});
+
+=======
+>>>>>>> 22dec5f9028f7ba89f5fc395faad13323d51385a
     players.forEach((player) => {
-      let message = "Nothing happened.";
+  let message = "Nothing happened.";
+
+  const isTarget = player.id === targetId;
+
+  // ☠️ Death warning takes priority
+  if (isTarget && willDieTonight) {
+    message = getRandomFromArray(DEATH_WARNING_MESSAGES);
+  } else {
 
       if (player.role === "murderer") {
         if (!targetId) {
@@ -1926,8 +2065,9 @@ async function maybeResolveNight() {
           message = "You do not have a valid target.";
         }
       } else {
-        message = "You survived the night.";
-      }
+  const flavorPool = ROLE_FLAVOR_MESSAGES[player.role] || ROLE_FLAVOR_MESSAGES.villager;
+  message = getRandomFromArray(flavorPool);
+}
 
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
         privateMessage: message,
@@ -1935,6 +2075,8 @@ async function maybeResolveNight() {
       });
     });
 
+    }
+    
     batch.update(roomRef, {
       phase: "night_result",
       pendingKillTargetId: targetId || null,
