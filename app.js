@@ -101,9 +101,6 @@ const roleRevealFloat = document.getElementById("roleRevealFloat");
 
 const lobbyWarnings = document.getElementById("lobbyWarnings");
 
-const privateMessagePanel = document.getElementById("privateMessagePanel");
-const privateMessageText = document.getElementById("privateMessageText");
-
 const savedName = localStorage.getItem(SAVED_NAME_KEY);
 if (savedName) {
   nameInput.value = savedName;
@@ -388,8 +385,6 @@ function showGameUI(roomCode) {
 function showMenuUI() {
   stopAmbient();
   hasFlippedRoleReveal = false;
-  privateMessagePanel.style.display = "none";
-  privateMessageText.textContent = "";
   lobbyWarnings.style.display = "none";
   lobbyWarnings.innerHTML = "";
   menu.style.display = "block";
@@ -1101,36 +1096,6 @@ if (phase === "game_over") {
   phaseBannerText.textContent = "The story continues.";
 }
 
-function renderPrivateMessage() {
-  if (!currentRoomData) {
-    privateMessagePanel.style.display = "none";
-    privateMessageText.textContent = "";
-    return;
-  }
-
-  const me = getMe();
-  if (!me) {
-    privateMessagePanel.style.display = "none";
-    privateMessageText.textContent = "";
-    return;
-  }
-
-  if (currentRoomData.phase === "role_reveal") {
-    privateMessagePanel.style.display = "block";
-    privateMessageText.textContent = "Your fate is yours alone. Reveal your role to learn what awaits you.";
-    return;
-  }
-
-  if (currentRoomData.phase === "night_result" && me.isAlive) {
-    privateMessagePanel.style.display = "block";
-    privateMessageText.textContent = me.privateMessage || "The night leaves you no answer.";
-    return;
-  }
-
-  privateMessagePanel.style.display = "none";
-  privateMessageText.textContent = "";
-}
-
 function renderActionPanel() {
   actionControls.innerHTML = "";
 
@@ -1248,7 +1213,7 @@ function renderActionPanel() {
       return;
     }
 
-    actionText.textContent = me.privateMessage || "No result.";
+    actionText.textContent = "Light slowly starts to shimmer...";
 
     const btn = document.createElement("button");
     btn.textContent = "Continue";
@@ -1455,7 +1420,6 @@ async function createRoom() {
       protectTargetId: null,
       investigateTargetId: null,
       voteTargetId: null,
-      privateMessage: "",
       executionerTargetId: null,
     });
 
@@ -1526,7 +1490,6 @@ if (existingNames.includes(name.toLowerCase())) {
       protectTargetId: null,
       investigateTargetId: null,
       voteTargetId: null,
-      privateMessage: "",
       executionerTargetId: null,
     });
 
@@ -1587,7 +1550,6 @@ function subscribeToRoom(roomCode) {
       }
 
       renderPublicMessage();
-renderPrivateMessage();
 renderActionPanel();
 renderWinScreen();
 
@@ -1788,7 +1750,6 @@ if (validationErrors.length > 0) {
         protectTargetId: null,
         investigateTargetId: null,
         voteTargetId: null,
-        privateMessage: "",
         executionerTargetId: executionerTargets[assignment.id] ?? null,
         isAlive: true
       });
@@ -1837,7 +1798,6 @@ async function returnGameToLobby() {
         protectTargetId: null,
         investigateTargetId: null,
         voteTargetId: null,
-        privateMessage: "",
         executionerTargetId: null
       });
     });
@@ -1885,7 +1845,6 @@ async function restartGame() {
     protectTargetId: null,
     investigateTargetId: null,
     voteTargetId: null,
-    privateMessage: "",
     executionerTargetId: null
   });
 });
@@ -2058,7 +2017,6 @@ async function maybeResolveNight() {
       }
 
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-        privateMessage: message,
         readyForPhase: false
       });
     });
@@ -2391,7 +2349,6 @@ async function maybeAdvanceAfterVoteResult() {
         protectTargetId: null,
         investigateTargetId: null,
         voteTargetId: null,
-        privateMessage: ""
       });
     });
 
