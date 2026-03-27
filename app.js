@@ -271,6 +271,7 @@ sounds.effects.click = createSound("sounds/click.mp3");
 sounds.effects.vote = createSound("sounds/vote.mp3");
 sounds.effects.kill = createSound("sounds/kill.mp3");
 sounds.effects.transition = createSound("sounds/transition.mp3");
+sounds.effects.bell = createSound("sounds/result.mp3");
 
 function getDefaultRoleSettings() {
   return {
@@ -1071,7 +1072,7 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "vote_result") {
-  playAmbient("sounds/result.mp3", 0.35);
+  playSound("bell", 0.3);
   gameScreen.classList.add("phase-vote-result");
   document.body.classList.add("body-vote-result");
 
@@ -1083,7 +1084,7 @@ function setPhaseAppearance(phase) {
 }
 
 if (phase === "game_over") {
-  playAmbient("sounds/result.mp3", 0.35);
+  playSound("bell", 0.3);
   gameScreen.classList.add("phase-game-over");
   document.body.classList.add("body-game-over");
 
