@@ -226,6 +226,11 @@ const DEATH_WARNING_MESSAGES = [
   "How mad would you be if you died next morning?"
 ];
 
+function getColoredRoleReveal(player) {
+  const info = getRoleInfo(player.role || "villager");
+  return ` They were <span class="${info.badgeClass}">${info.name}</span>.`;
+}
+
 function getRandomFromArray(arr) {
   if (!arr || arr.length === 0) return "";
   return arr[Math.floor(Math.random() * arr.length)];
@@ -386,6 +391,7 @@ function showGameUI(roomCode) {
 function showMenuUI() {
   stopAmbient();
   hasFlippedRoleReveal = false;
+  stopAllSounds();
   lobbyWarnings.style.display = "none";
   lobbyWarnings.innerHTML = "";
   menu.style.display = "block";
@@ -472,15 +478,18 @@ function getAliveOtherPlayers() {
 }
 
 function getWinnerFromPlayers(players) {
-  const aliveMurderers = players.filter((p) => p.isAlive && p.team === "murderer").length;
-  const aliveNonMurderers = players.filter((p) => p.isAlive && p.team !== "murderer").length;
+  const alive = players.filter((p) => p.isAlive);
+
+  const aliveMurderers = alive.filter((p) => p.team === "murderer").length;
+  const aliveNonMurderers = alive.filter((p) => p.team !== "murderer").length;
+
+  // Murderer only wins if they are the ONLY faction left
+  if (aliveMurderers > 0 && aliveNonMurderers === 0) {
+    return "murderer";
+  }
 
   if (aliveMurderers === 0) {
     return "village";
-  }
-
-  if (aliveMurderers >= aliveNonMurderers) {
-    return "murderer";
   }
 
   return null;
@@ -1387,7 +1396,8 @@ async function maybeAdvanceAfterNightResult() {
         });
 
         playSound("kill", 0.7);
-        morningMessage = `${target.name} was found dead at dawn.`;
+        const reveal = !!roomData.settings?.revealRolesOnDeath;
+morningMessage = `<strong>${target.name}</strong> was found dead at dawn.${reveal ? getColoredRoleReveal(target) : ""}`;
       }
     } else if (pendingKillId && killBlocked) {
       morningMessage = "Someone was attacked during the night, but they survived.";
@@ -1821,30 +1831,32 @@ async function returnGameToLobby() {
     const players = playersSnap.docs.map((docSnap) => docSnap.data());
 
     const batch = writeBatch(db);
-
+stopAllSounds();
     players.forEach((player) => {
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-        role: null,
-        team: null,
-        isAlive: true,
-        readyForPhase: false,
-        nightActionTargetId: null,
-        protectTargetId: null,
-        investigateTargetId: null,
-        voteTargetId: null,
-        executionerTargetId: null,
-        nightResultMessage: ""
-      });
+  role: null,
+  team: null,
+  isAlive: true,
+  readyForPhase: false,
+  nightActionTargetId: null,
+  protectTargetId: null,
+  investigateTargetId: null,
+  voteTargetId: null,
+  executionerTargetId: null,
+  nightResultMessage: ""
+});
     });
 
     batch.update(roomRef, {
-      status: "lobby",
-      phase: "lobby",
-      dayNumber: 0,
-      publicMessage: "The room is waiting for players.",
-      winner: null,
-      winnerText: ""
-    });
+  status: "lobby",
+  phase: "lobby",
+  dayNumber: 0,
+  publicMessage: "The room is waiting for players.",
+  winner: null,
+  winnerText: "",
+  pendingKillTargetId: null,
+  killBlocked: false
+});
 
     await batch.commit();
   } catch (error) {
@@ -1870,19 +1882,21 @@ async function restartGame() {
 
     const batch = writeBatch(db);
 
+stopAllSounds();
+
     players.forEach((player) => {
   batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-    role: null,
-    team: null,
-    isAlive: true,
-    readyForPhase: false,
-    nightActionTargetId: null,
-    protectTargetId: null,
-    investigateTargetId: null,
-    voteTargetId: null,
-    executionerTargetId: null,
-    nightResultMessage: ""
-  });
+  role: null,
+  team: null,
+  isAlive: true,
+  readyForPhase: false,
+  nightActionTargetId: null,
+  protectTargetId: null,
+  investigateTargetId: null,
+  voteTargetId: null,
+  executionerTargetId: null,
+  nightResultMessage: ""
+});
 });
 
     batch.update(roomRef, {
@@ -1891,7 +1905,9 @@ async function restartGame() {
   dayNumber: 0,
   publicMessage: "The room is waiting for players.",
   winner: null,
-  winnerText: ""
+  winnerText: "",
+  pendingKillTargetId: null,
+  killBlocked: false
 });
 
     await batch.commit();
@@ -2158,20 +2174,24 @@ playSound("vote", 0.7);
 function stopAmbient() {
   if (!sounds.ambient) return;
 
-  const audio = sounds.ambient;
+  try {
+    sounds.ambient.pause();
+    sounds.ambient.currentTime = 0;
+  } catch (_) {}
 
-  const fade = setInterval(() => {
-    if (audio.volume > 0.05) {
-      audio.volume -= 0.05;
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
-      sounds.ambient = null;
-      clearInterval(fade);
-    }
-  }, 50);
+  sounds.ambient = null;
 }
 
+function stopAllSounds() {
+  stopAmbient();
+
+  Object.values(sounds.effects).forEach((sound) => {
+    try {
+      sound.pause();
+      sound.currentTime = 0;
+    } catch (_) {}
+  });
+}
 
 function getExecutionerWinners(players, eliminatedPlayerId, cause) {
   if (cause !== "vote") return [];
@@ -2256,7 +2276,8 @@ async function maybeResolveVoting() {
             readyForPhase: false
           });
 
-          publicMessage = `${eliminatedPlayer.name} was voted out.`;
+          const reveal = !!roomData.settings?.revealRolesOnDeath;
+publicMessage = `<strong>${eliminatedPlayer.name}</strong> was voted out.${reveal ? getColoredRoleReveal(eliminatedPlayer) : ""}`;
         }
       }
     }
