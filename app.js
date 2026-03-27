@@ -946,7 +946,6 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "vote_result") {
-    playAmbient("sounds/result.mp3", 0.35);
     gameScreen.classList.add("phase-vote-result");
     document.body.classList.add("body-vote-result");
 
@@ -955,10 +954,10 @@ function setPhaseAppearance(phase) {
     phaseBannerTitle.textContent = "Vote Result";
     phaseBannerText.textContent = "The verdict has been decided.";
     return;
+    playAmbient("sounds/result.mp3", 0.35);
   }
 
   if (phase === "game_over") {
-    playAmbient("sounds/result.mp3", 0.35);
     gameScreen.classList.add("phase-game-over");
     document.body.classList.add("body-game-over");
 
@@ -967,6 +966,7 @@ function setPhaseAppearance(phase) {
     phaseBannerTitle.textContent = "Game Over";
     phaseBannerText.textContent = "The night’s tale has come to an end.";
     return;
+    playAmbient("sounds/result.mp3", 0.35);
   }
 
   phaseBanner.className = "phase-banner";
