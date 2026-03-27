@@ -1757,7 +1757,7 @@ if (validationErrors.length > 0) {
         investigateTargetId: null,
         voteTargetId: null,
         executionerTargetId: executionerTargets[assignment.id] ?? null,
-        nightResultMessage: ""
+        nightResultMessage: "",
         isAlive: true
       });
     });
