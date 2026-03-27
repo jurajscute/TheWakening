@@ -264,6 +264,7 @@ function playAmbient(src, volume = 0.35) {
   sounds.ambient = audio;
 }
 
+sounds.effects.heartbeat = createSound("sounds/heartbeat.mp3");
 sounds.effects.click = createSound("sounds/click.mp3");
 sounds.effects.vote = createSound("sounds/vote.mp3");
 sounds.effects.kill = createSound("sounds/kill.mp3");
@@ -560,7 +561,7 @@ function renderRole(role) {
   } else {
     const target = currentPlayers.find((p) => p.id === me.executionerTargetId);
     if (target) {
-      description += ` Your target is ${target.name}.`;
+      description += ` Your target is <span class="exec-target-name">${target.name}</span>.`;
     } else {
       description += " Assigning your target...";
     }
@@ -574,16 +575,14 @@ function renderRole(role) {
   roleTeam.textContent = info.team;
   roleTeam.className = info.teamClass;
 
-  roleDescription.textContent = description;
-
+  roleDescription.innerHTML = description;
+  roleDescriptionReveal.innerHTML = description;
   // Reveal card content
   roleNameReveal.textContent = info.name;
   roleNameReveal.className = info.badgeClass;
 
   roleTeamReveal.textContent = info.team;
   roleTeamReveal.className = info.teamClass;
-
-  roleDescriptionReveal.textContent = description;
 
   roleCard.className = "role-card";
   roleCard.classList.add(info.className);
@@ -1224,12 +1223,23 @@ function renderActionPanel() {
   }
 
     if (currentRoomData.phase === "night_result") {
+
+      actionControls.className = "night-result-controls"; // optional container styling
+
     if (me.readyForPhase) {
       actionText.innerHTML = '<span class="ready-text">Waiting for others...</span>';
       return;
     }
 
     const resultMessage = me.nightResultMessage;
+    const isDeathWarning = DEATH_WARNING_MESSAGES.includes(resultMessage);
+
+    const roleClass = `night-result-${me.role || "villager"}`;
+actionText.className = `night-result-text ${roleClass} ${isDeathWarning ? "death-warning" : ""}`;
+
+if (isDeathWarning) {
+  playSound("heartbeat", 0.2);
+}
 
     actionText.textContent =
       resultMessage && resultMessage.trim() !== ""

@@ -2448,12 +2448,12 @@ body.body-game-over {
 
 .executioner-target {
   position: relative;
-  box-shadow: 0 0 10px rgba(255, 80, 103, 0.35);
-  border: 1px solid rgba(66, 17, 25, 0.4);
+  box-shadow: 0 0 10px rgba(205, 80, 255, 0.35);
+  border: 1px solid rgba(66, 17, 40, 0.4);
   background: linear-gradient(
     to right,
-    rgba(255, 80, 80, 0.08),
-    rgba(255, 80, 80, 0.02)
+    rgba(191, 80, 255, 0.185),
+    rgba(179, 0, 0, 0.192)
   );
 }
 
@@ -2463,7 +2463,7 @@ body.body-game-over {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: 0 0 12px rgba(102, 25, 50, 0.25);
+  box-shadow: 0 0 12px rgba(87, 25, 102, 0.25);
   opacity: 0;
   animation: execPulse 2.5s infinite;
 }
@@ -2478,4 +2478,122 @@ body.body-game-over {
   content: " ✧";
   font-size: 0.8em;
   opacity: 0.7;
+}
+
+.exec-target-name {
+  color: #74009781;
+  font-weight: 600;
+  text-shadow: 0 0 6px rgba(92, 0, 0, 0.267);
+}
+
+/* Base night result style */
+.night-result-text {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  padding: 14px 16px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+/* Murderer */
+.night-result-murderer {
+  color: #ff4d4d;
+  background: rgba(120, 0, 0, 0.25);
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  box-shadow: 0 0 12px rgba(255, 0, 0, 0.2);
+}
+
+/* Doctor */
+.night-result-doctor {
+  color: #76ff98;
+  background: rgba(0, 120, 54, 0.25);
+  border: 1px solid rgba(80, 255, 182, 0.4);
+  box-shadow: 0 0 12px rgba(0, 255, 128, 0.2);
+}
+
+/* Watchman */
+.night-result-watchman {
+  color: #ffd18c;
+  background: rgba(120, 78, 0, 0.25);
+  border: 1px solid rgba(255, 224, 120, 0.4);
+}
+
+/* Executioner */
+.night-result-executioner {
+  color: #784a7c;
+  background: rgba(120, 0, 80, 0.25);
+  border: 1px solid rgba(231, 50, 255, 0.4);
+}
+
+/* Hysteric */
+.night-result-hysteric {
+  color: #ff6bff;
+  background: rgba(120, 0, 120, 0.25);
+  border: 1px solid rgba(255, 120, 255, 0.4);
+}
+
+/* Villager */
+.night-result-villager {
+  color: #e0e0e0;
+  background: rgba(80, 80, 80, 0.2);
+  border: 1px solid rgba(200, 200, 200, 0.2);
+}
+
+.night-result-text {
+  animation: fadeInResult 0.5s ease;
+}
+
+@keyframes fadeInResult {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 💀 Death warning base */
+.death-warning {
+  color: #ff4d4d !important;
+  border: 1px solid rgba(255, 80, 80, 0.6) !important;
+  box-shadow: 0 0 18px rgba(255, 0, 0, 0.35);
+  animation: heartbeatPulse 1.2s infinite ease-in-out;
+}
+
+/* ❤️ Heartbeat pulse */
+@keyframes heartbeatPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 12px rgba(255, 0, 0, 0.25);
+  }
+  25% {
+    transform: scale(1.02);
+    box-shadow: 0 0 22px rgba(255, 0, 0, 0.45);
+  }
+  40% {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.015);
+    box-shadow: 0 0 18px rgba(255, 0, 0, 0.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 😨 subtle shake (VERY light so it's not annoying) */
+.death-warning {
+  animation:
+    heartbeatPulse 1.2s infinite ease-in-out,
+    warningShake 2.5s infinite ease-in-out;
+}
+
+@keyframes warningShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(0.5px); }
+  50% { transform: translateX(-0.5px); }
+  75% { transform: translateX(0.3px); }
 }
