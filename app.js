@@ -804,6 +804,18 @@ function renderSettingsPanel() {
   }
 }
 
+function handleSettingLivePreview(event) {
+  const input = event.target;
+
+  if (input.dataset.field === "weight") {
+    const row = input.closest(".role-setting-control-block");
+    const valueText = row?.querySelector(".weight-value");
+    if (valueText) {
+      valueText.textContent = input.value;
+    }
+  }
+}
+
 async function handleSettingChange(event) {
   try {
     const me = getMe();
@@ -858,11 +870,10 @@ async function handleSettingChange(event) {
     }
 
     const saveSettings = async () => {
-      await updateDoc(doc(db, "rooms", currentRoomCode), {
-        settings: {
-          roles: nextSettings
-        }
-      });
+  await updateDoc(doc(db, "rooms", currentRoomCode), {
+    "settings.roles": nextSettings
+  });
+};
     };
 
     // Let the switch animation finish before rerendering from Firestore
