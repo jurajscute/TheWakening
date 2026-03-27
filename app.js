@@ -1153,6 +1153,9 @@ if (phase === "game_over") {
 function renderActionPanel() {
   actionControls.innerHTML = "";
 
+  actionText.className = "phase-action-text";
+  actionControls.className = "";
+
   if (!currentRoomData) return;
 
   const me = getMe();
