@@ -2445,3 +2445,37 @@ body.body-game-over {
 #game:not(.phase-morning) .public-message-panel {
   display: none;
 }
+
+.executioner-target {
+  position: relative;
+  box-shadow: 0 0 10px rgba(255, 80, 103, 0.35);
+  border: 1px solid rgba(66, 17, 25, 0.4);
+  background: linear-gradient(
+    to right,
+    rgba(255, 80, 80, 0.08),
+    rgba(255, 80, 80, 0.02)
+  );
+}
+
+/* Optional subtle pulse */
+.executioner-target::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 12px rgba(102, 25, 50, 0.25);
+  opacity: 0;
+  animation: execPulse 2.5s infinite;
+}
+
+@keyframes execPulse {
+  0% { opacity: 0; }
+  50% { opacity: 0.4; }
+  100% { opacity: 0; }
+}
+
+.executioner-target span:first-child::after {
+  content: " ✧";
+  font-size: 0.8em;
+  opacity: 0.7;
+}

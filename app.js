@@ -488,14 +488,26 @@ function getWinnerFromPlayers(players) {
 function renderAlivePlayers(players) {
   alivePlayerList.innerHTML = "";
 
+  const me = getMe();
+
   players.forEach((player) => {
     const li = document.createElement("li");
-    li.className = player.isAlive ? "player-row alive-player" : "player-row dead-player";
 
-    const status = player.isAlive ? "Alive" : "Dead";
+    const isAlive = player.isAlive;
+    const isExecutioner = me && me.role === "executioner";
+    const isMyTarget = isExecutioner && me.executionerTargetId === player.id;
+
+    li.className = isAlive ? "player-row alive-player" : "player-row dead-player";
+
+    // 👇 Add subtle highlight ONLY for executioner target
+    if (isMyTarget && isAlive) {
+      li.classList.add("executioner-target");
+    }
+
+    const status = isAlive ? "Alive" : "Dead";
 
     li.innerHTML = `
-      <span class="${player.isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
+      <span class="${isAlive ? "" : "dead-text"}">${escapeHtml(player.name)}</span>
       <span class="player-status">${status}</span>
     `;
 
@@ -1992,7 +2004,7 @@ async function maybeResolveNight() {
         } else if (killBlocked) {
           message = "Your kill failed. Your target was protected.";
         } else {
-          message = "Your kill was successful.";
+          message = getRandomFromArray(ROLE_FLAVOR_MESSAGES.murderer);
         }
       } else if (player.role === "doctor") {
         if (!protectedId) {
@@ -2003,7 +2015,7 @@ async function maybeResolveNight() {
             ? `You successfully protected ${savedPlayer.name}.`
             : "Your protection was successful.";
         } else {
-          message = "Your protection was not needed.";
+          message = getRandomFromArray(ROLE_FLAVOR_MESSAGES.doctor);
         }
       } else if (player.role === "watchman") {
         if (!investigatedId) {
