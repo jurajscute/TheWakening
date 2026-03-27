@@ -761,6 +761,7 @@ function renderSettingsPanel() {
       section.appendChild(row);
     });
 
+    settingsContent.appendChild(section);
   const deathRevealRow = document.createElement("div");
   deathRevealRow.className = "role-setting-row role-setting-card";
 
@@ -786,7 +787,6 @@ function renderSettingsPanel() {
 
   settingsContent.appendChild(deathRevealRow);
 
-    settingsContent.appendChild(section);
   });
 
   
