@@ -460,7 +460,12 @@ function renderRole(role) {
 
 function renderPublicMessage() {
   if (!currentRoomData) return;
-  publicMessageText.textContent = currentRoomData.publicMessage || "No message yet.";
+
+  if (currentRoomData.phase === "morning") {
+    publicMessageText.textContent = currentRoomData.publicMessage || "";
+  } else {
+    publicMessageText.textContent = "";
+  }
 }
 
 function renderLobbyWarnings() {
@@ -847,7 +852,6 @@ async function maybeAdvanceAfterRoleReveal() {
 
     batch.update(roomRef, {
       phase: "night_action",
-      publicMessage: "The first night begins."
     });
 
     await batch.commit();
@@ -1257,13 +1261,24 @@ async function maybeAdvanceAfterNightResult() {
     const killBlocked = !!targetId && !!protectedId && targetId === protectedId;
     const killSucceeded = !!targetId && !killBlocked;
 
-    let morningMessage = "No one died tonight.";
-    if (killSucceeded) {
-      const target = players.find((p) => p.id === targetId);
-      if (target) {
-        morningMessage = `${target.name} was found dead at dawn.`;
-      }
-    }
+    const pendingKillId = roomData.pendingKillTargetId;
+const killBlocked = roomData.killBlocked;
+
+let morningMessage = "No one died tonight.";
+
+if (pendingKillId && !killBlocked) {
+  const target = players.find((p) => p.id === pendingKillId);
+
+  if (target && target.isAlive) {
+    batch.update(doc(db, "rooms", currentRoomCode, "players", pendingKillId), {
+      isAlive: false
+    });
+
+    morningMessage = `${target.name} was found dead at dawn.`;
+  }
+} else if (pendingKillId && killBlocked) {
+  morningMessage = "Someone was attacked during the night, but they survived.";
+}
 
     const batch = writeBatch(db);
 
@@ -1276,6 +1291,8 @@ async function maybeAdvanceAfterNightResult() {
     batch.update(roomRef, {
       phase: "morning",
       publicMessage: morningMessage
+      pendingKillTargetId: null,
+      killBlocked: false
     });
 
     await batch.commit();
@@ -1875,17 +1892,11 @@ async function maybeResolveNight() {
 
     const batch = writeBatch(db);
 
-    if (killSucceeded) {
-  playSound("kill", 0.9);
-await new Promise(r => setTimeout(r, 300));
-  const target = players.find((player) => player.id === targetId);
-  if (target && target.isAlive) {
-    batch.update(doc(db, "rooms", currentRoomCode, "players", targetId), {
-      isAlive: false,
-      readyForPhase: false
-    });
-  }
-}
+    batch.update(roomRef, {
+  phase: "night_result",
+  pendingKillTargetId: killSucceeded ? targetId : null,
+  killBlocked: killBlocked
+});
 
     players.forEach((player) => {
       let message = "Nothing happened.";
@@ -1939,7 +1950,6 @@ await new Promise(r => setTimeout(r, 300));
 
     batch.update(roomRef, {
       phase: "night_result",
-      publicMessage: "The night is ending..."
     });
 
     await batch.commit();
@@ -2009,7 +2019,6 @@ async function maybeAdvanceAfterMorning() {
 
     batch.update(roomRef, {
       phase: "voting",
-      publicMessage: "Discuss and choose someone to eliminate."
     });
 
     await batch.commit();
@@ -2271,7 +2280,6 @@ async function maybeAdvanceAfterVoteResult() {
     batch.update(roomRef, {
       phase: "night_action",
       dayNumber: roomData.dayNumber + 1,
-      publicMessage: "Night falls again."
     });
 
     await batch.commit();

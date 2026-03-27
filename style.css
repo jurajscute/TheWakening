@@ -2441,3 +2441,7 @@ body.body-game-over {
 #game.phase-vote-result .public-message-panel {
   box-shadow: 0 0 24px rgba(200, 90, 90, 0.08);
 }
+
+#game:not(.phase-morning) .public-message-panel {
+  display: none;
+}
