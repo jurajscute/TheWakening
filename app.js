@@ -950,28 +950,28 @@ function setPhaseAppearance(phase) {
   }
 
   if (phase === "vote_result") {
-    gameScreen.classList.add("phase-vote-result");
-    document.body.classList.add("body-vote-result");
+  playAmbient("sounds/result.mp3", 0.35);
+  gameScreen.classList.add("phase-vote-result");
+  document.body.classList.add("body-vote-result");
 
-    phaseBanner.className = "phase-banner phase-vote-result";
-    phaseBannerEyebrow.textContent = "Judgment";
-    phaseBannerTitle.textContent = "Vote Result";
-    phaseBannerText.textContent = "The verdict has been decided.";
-    return;
-    playAmbient("sounds/result.mp3", 0.35);
-  }
+  phaseBanner.className = "phase-banner phase-vote-result";
+  phaseBannerEyebrow.textContent = "Judgment";
+  phaseBannerTitle.textContent = "Vote Result";
+  phaseBannerText.textContent = "The verdict has been decided.";
+  return;
+}
 
-  if (phase === "game_over") {
-    gameScreen.classList.add("phase-game-over");
-    document.body.classList.add("body-game-over");
+if (phase === "game_over") {
+  playAmbient("sounds/result.mp3", 0.35);
+  gameScreen.classList.add("phase-game-over");
+  document.body.classList.add("body-game-over");
 
-    phaseBanner.className = "phase-banner phase-game-over";
-    phaseBannerEyebrow.textContent = "Finale";
-    phaseBannerTitle.textContent = "Game Over";
-    phaseBannerText.textContent = "The night’s tale has come to an end.";
-    return;
-    playAmbient("sounds/result.mp3", 0.35);
-  }
+  phaseBanner.className = "phase-banner phase-game-over";
+  phaseBannerEyebrow.textContent = "Finale";
+  phaseBannerTitle.textContent = "Game Over";
+  phaseBannerText.textContent = "The night’s tale has come to an end.";
+  return;
+}
 
   phaseBanner.className = "phase-banner";
   phaseBannerEyebrow.textContent = "Phase";
@@ -1249,37 +1249,31 @@ async function maybeAdvanceAfterNightResult() {
 
     const players = playersSnap.docs.map((docSnap) => docSnap.data());
     const alivePlayers = players.filter((p) => p.isAlive);
-
     const allReady = alivePlayers.every((p) => p.readyForPhase === true);
+
     if (!allReady) return;
 
-    const murderer = players.find((p) => p.isAlive && p.role === "murderer");
-    const doctor = players.find((p) => p.isAlive && p.role === "doctor");
-
-    const targetId = murderer ? murderer.nightActionTargetId : null;
-    const protectedId = doctor ? doctor.protectTargetId : null;
-    const killBlocked = !!targetId && !!protectedId && targetId === protectedId;
-    const killSucceeded = !!targetId && !killBlocked;
-
-    const pendingKillId = roomData.pendingKillTargetId;
-
-let morningMessage = "No one died tonight.";
-
-if (pendingKillId && !killBlocked) {
-  const target = players.find((p) => p.id === pendingKillId);
-
-  if (target && target.isAlive) {
-    batch.update(doc(db, "rooms", currentRoomCode, "players", pendingKillId), {
-      isAlive: false
-    });
-
-    morningMessage = `${target.name} was found dead at dawn.`;
-  }
-} else if (pendingKillId && killBlocked) {
-  morningMessage = "Someone was attacked during the night, but they survived.";
-}
-
     const batch = writeBatch(db);
+
+    const pendingKillId = roomData.pendingKillTargetId || null;
+    const killBlocked = !!roomData.killBlocked;
+
+    let morningMessage = "No one died tonight.";
+
+    if (pendingKillId && !killBlocked) {
+      const target = players.find((p) => p.id === pendingKillId);
+
+      if (target && target.isAlive) {
+        batch.update(doc(db, "rooms", currentRoomCode, "players", pendingKillId), {
+          isAlive: false
+        });
+
+        playSound("kill", 0.7);
+        morningMessage = `${target.name} was found dead at dawn.`;
+      }
+    } else if (pendingKillId && killBlocked) {
+      morningMessage = "Someone was attacked during the night, but they survived.";
+    }
 
     alivePlayers.forEach((player) => {
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
@@ -1289,7 +1283,7 @@ if (pendingKillId && !killBlocked) {
 
     batch.update(roomRef, {
       phase: "morning",
-      publicMessage: morningMessage
+      publicMessage: morningMessage,
       pendingKillTargetId: null,
       killBlocked: false
     });
@@ -1880,7 +1874,7 @@ async function maybeResolveNight() {
 
     const murderer = alivePlayers.find((player) => player.role === "murderer");
     const doctor = alivePlayers.find((player) => player.role === "doctor");
-    const watchman = alivePlayers.find((p) => p.role === "watchman");
+    const watchman = alivePlayers.find((player) => player.role === "watchman");
 
     const targetId = murderer ? murderer.nightActionTargetId : null;
     const protectedId = doctor ? doctor.protectTargetId : null;
@@ -1890,12 +1884,6 @@ async function maybeResolveNight() {
     const killSucceeded = !!targetId && !killBlocked;
 
     const batch = writeBatch(db);
-
-    batch.update(roomRef, {
-  phase: "night_result",
-  pendingKillTargetId: killSucceeded ? targetId : null,
-  killBlocked: killBlocked
-});
 
     players.forEach((player) => {
       let message = "Nothing happened.";
@@ -1929,14 +1917,14 @@ async function maybeResolveNight() {
           }
         }
       } else if (player.role === "hysteric") {
-  message = "You crave the rope, the fire, the fall. You must be voted out.";
-} else if (player.role === "executioner") {
-  const target = players.find((p) => p.id === player.executionerTargetId);
-  if (target) {
-    message = `Your target is ${target.name}. Get them voted out.`;
-  } else {
-    message = "You do not have a valid target.";
-  }
+        message = "You crave the rope, the fire, the fall. You must be voted out.";
+      } else if (player.role === "executioner") {
+        const target = players.find((p) => p.id === player.executionerTargetId);
+        if (target) {
+          message = `Your target is ${target.name}. Get them voted out.`;
+        } else {
+          message = "You do not have a valid target.";
+        }
       } else {
         message = "You survived the night.";
       }
@@ -1949,6 +1937,8 @@ async function maybeResolveNight() {
 
     batch.update(roomRef, {
       phase: "night_result",
+      pendingKillTargetId: targetId || null,
+      killBlocked: killBlocked
     });
 
     await batch.commit();
