@@ -874,7 +874,6 @@ async function handleSettingChange(event) {
     "settings.roles": nextSettings
   });
 };
-    };
 
     // Let the switch animation finish before rerendering from Firestore
     if (field === "enabled") {
