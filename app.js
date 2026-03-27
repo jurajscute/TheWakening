@@ -762,6 +762,8 @@ function renderSettingsPanel() {
     });
 
     settingsContent.appendChild(section);
+  });
+
   const deathRevealRow = document.createElement("div");
   deathRevealRow.className = "role-setting-row role-setting-card";
 
@@ -787,9 +789,6 @@ function renderSettingsPanel() {
 
   settingsContent.appendChild(deathRevealRow);
 
-  });
-
-  
   const note = document.createElement("div");
   note.className = "setting-note";
   note.textContent = isHost
@@ -802,18 +801,6 @@ function renderSettingsPanel() {
       input.addEventListener("change", handleSettingChange);
       input.addEventListener("input", handleSettingLivePreview);
     });
-  }
-}
-
-function handleSettingLivePreview(event) {
-  const input = event.target;
-
-  if (input.dataset.field === "weight") {
-    const row = input.closest(".role-setting-control-block");
-    const valueText = row?.querySelector(".weight-value");
-    if (valueText) {
-      valueText.textContent = input.value;
-    }
   }
 }
 
