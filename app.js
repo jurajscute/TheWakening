@@ -543,13 +543,17 @@ function renderRole(role) {
   let description = info.description;
 
   if (me && me.role === "executioner") {
+  if (!me.executionerTargetId) {
+    description += " Assigning your target...";
+  } else {
     const target = currentPlayers.find((p) => p.id === me.executionerTargetId);
     if (target) {
       description += ` Your target is ${target.name}.`;
     } else {
-      description += " You do not have a valid target.";
+      description += " Assigning your target...";
     }
   }
+}
 
   // Normal card content
   roleName.textContent = info.name;
@@ -2015,12 +2019,7 @@ async function maybeResolveNight() {
       } else if (player.role === "hysteric") {
         message = getRandomFromArray(ROLE_FLAVOR_MESSAGES.hysteric);
       } else if (player.role === "executioner") {
-        const target = players.find((p) => p.id === player.executionerTargetId);
-        if (target) {
-          message = `Your target is ${target.name}. Get them voted out.`;
-        } else {
-          message = "You do not have a valid target.";
-        }
+        message = getRandomFromArray(ROLE_FLAVOR_MESSAGES.executioner);
       } else {
         const flavorPool = ROLE_FLAVOR_MESSAGES[player.role] || ROLE_FLAVOR_MESSAGES.villager;
         message = getRandomFromArray(flavorPool);
