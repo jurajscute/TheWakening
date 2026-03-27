@@ -125,7 +125,7 @@ const ROLE_FLAVOR_MESSAGES = {
 "This is the best sleep you've ever had.",
 "Being in this village, you learned: 'Life isn't fair.'.",
 "The night is suspiciously quiet...",
-"You had a dream about a giat loaf of bread.",
+"You had a dream about a giant loaf of bread.",
 "You woke up and noticed you drooled.",
 "You wonder why everyone keeps calling you dumb :(",
 "There's only so many people the evil can get, you're safe right?",
@@ -1207,17 +1207,18 @@ function renderActionPanel() {
     return;
   }
 
-  if (currentRoomData.phase === "night_result") {
+    if (currentRoomData.phase === "night_result") {
     if (me.readyForPhase) {
       actionText.innerHTML = '<span class="ready-text">Waiting for others...</span>';
       return;
     }
+
     const resultMessage = me.nightResultMessage;
 
-actionText.textContent =
-  resultMessage && resultMessage.trim() !== ""
-    ? resultMessage
-    : "Light slowly starts to shimmer...";
+    actionText.textContent =
+      resultMessage && resultMessage.trim() !== ""
+        ? resultMessage
+        : "Light slowly starts to shimmer...";
 
     const btn = document.createElement("button");
     btn.textContent = "Continue";
@@ -1805,7 +1806,7 @@ async function returnGameToLobby() {
         protectTargetId: null,
         investigateTargetId: null,
         voteTargetId: null,
-        executionerTargetId: null
+        executionerTargetId: null,
         nightResultMessage: ""
       });
     });
@@ -1853,7 +1854,7 @@ async function restartGame() {
     protectTargetId: null,
     investigateTargetId: null,
     voteTargetId: null,
-    executionerTargetId: null
+    executionerTargetId: null,
     nightResultMessage: ""
   });
 });
@@ -2026,7 +2027,7 @@ async function maybeResolveNight() {
       }
 
       batch.update(doc(db, "rooms", currentRoomCode, "players", player.id), {
-        readyForPhase: false
+        readyForPhase: false,
         nightResultMessage: message
       });
     });
