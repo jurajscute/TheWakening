@@ -640,6 +640,7 @@ function renderSettingsPanel() {
   const me = getMe();
   const isHost = me && me.isHost;
   const settings = currentRoomData.settings?.roles || getDefaultRoleSettings();
+  const revealRolesOnDeath = !!currentRoomData.settings?.revealRolesOnDeath;
 
   settingsPanel.style.display = currentRoomData.status === "lobby" ? "block" : "none";
   settingsContent.innerHTML = "";
@@ -760,9 +761,35 @@ function renderSettingsPanel() {
       section.appendChild(row);
     });
 
+  const deathRevealRow = document.createElement("div");
+  deathRevealRow.className = "role-setting-row role-setting-card";
+
+  deathRevealRow.innerHTML = `
+    <div class="role-setting-main">
+      <div class="role-setting-title">Reveal Roles On Death</div>
+      <div class="role-setting-flavor">Show a player's role when they die or are voted out.</div>
+    </div>
+
+    <div class="role-setting-control-block">
+      <div class="role-setting-label">Enabled</div>
+      <label class="switch">
+        <input
+          type="checkbox"
+          data-setting="revealRolesOnDeath"
+          ${revealRolesOnDeath ? "checked" : ""}
+          ${isHost ? "" : "disabled"}
+        >
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+  `;
+
+  settingsContent.appendChild(deathRevealRow);
+
     settingsContent.appendChild(section);
   });
 
+  
   const note = document.createElement("div");
   note.className = "setting-note";
   note.textContent = isHost
@@ -798,6 +825,12 @@ async function handleSettingChange(event) {
     }
 
     const input = event.target;
+        if (input.dataset.setting === "revealRolesOnDeath") {
+      await updateDoc(doc(db, "rooms", currentRoomCode), {
+        "settings.revealRolesOnDeath": input.checked
+      });
+      return;
+    }
     const role = input.dataset.role;
     const field = input.dataset.field;
 
@@ -1444,8 +1477,9 @@ async function createRoom() {
       dayNumber: 0,
       publicMessage: "The room is waiting for players.",
       settings: {
-        roles: getDefaultRoleSettings()
-      }
+  roles: getDefaultRoleSettings(),
+  revealRolesOnDeath: false
+}
     });
 
     await setDoc(doc(db, "rooms", roomCode, "players", playerId), {
@@ -1612,6 +1646,27 @@ if (me && me.isHost && currentRoomData.status === "in_progress") {
   });
 }
 
+async function maybeAutoEndGame() {
+  try {
+    if (!currentRoomCode || !currentRoomData) return;
+    if (currentRoomData.phase === "game_over") return;
+    if (currentRoomData.status !== "in_progress") return;
+    if (currentRoomData.hostId !== currentPlayerId) return;
+
+    const winner = getWinnerFromPlayers(currentPlayers);
+    if (!winner) return;
+
+    await updateDoc(doc(db, "rooms", currentRoomCode), {
+      phase: "game_over",
+      publicMessage: winner === "village" ? "Village wins!" : "Murderers win!",
+      winner,
+      winnerText: winner === "village" ? "Village wins!" : "Murderers win!"
+    });
+  } catch (error) {
+    console.error("Auto end game failed:", error);
+  }
+}
+
 function subscribeToPlayers(roomCode) {
   const playersRef = query(
     collection(db, "rooms", roomCode, "players"),
@@ -1625,6 +1680,7 @@ function subscribeToPlayers(roomCode) {
     });
 
     currentPlayers = players;
+    maybeAutoEndGame();
 
     playerList.innerHTML = "";
 
